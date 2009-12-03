@@ -29,17 +29,15 @@ class Mojo
   function config()
   {
     //Change these paths to point to your project dirs
-    //This probably shouldn't change, 
     MojoUtils::setConfig('sf_lib_dir',dirname(__FILE__).'/');
     MojoUtils::setConfig('sf_web_dir',dirname(__FILE__).'/../../../web');
+    MojoUtils::setConfig('sf_mojo_dir',MojoUtils::getConfig('sf_web_dir').'/js/kiwi/');
+    MojoUtils::setConfig('sf_mojo_lib_dir',MojoUtils::getConfig('sf_lib_dir'));
   }
 
   function handler($arguments = array(), $options = array())
   {
    
-    MojoUtils::setConfig('sf_mojo_dir',MojoUtils::getConfig('sf_web_dir').'/js/kiwi/');
-    MojoUtils::setConfig('sf_mojo_lib_dir',MojoUtils::getConfig('sf_lib_dir'));
-
     if(count($arguments) < 2 || array_key_exists("help",$options))
        Mojo::exception("Acceptable use: $ mojo [Module] [Action] --name=(string) --author=(string) --description=(string)"," - HELP - ");
  
