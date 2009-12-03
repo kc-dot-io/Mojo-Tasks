@@ -28,8 +28,8 @@ class Mojo
 
   function config()
   {
-	//Change these paths to point to your project dirs
-	//This probably shouldn't change, 
+    //Change these paths to point to your project dirs
+    //This probably shouldn't change, 
     MojoUtils::setConfig('sf_lib_dir',dirname(__FILE__).'/');
     MojoUtils::setConfig('sf_web_dir',dirname(__FILE__).'/../../../web');
   }
