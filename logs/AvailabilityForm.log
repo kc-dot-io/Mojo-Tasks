@@ -1,3 +1,4 @@
+$ mojo Symfony Translate --i18n=./apps/frontend/i18n/login_form.en.xml --form=AvailabilityForm --mojo_lib=./web/js/kiwi/ --name=kiwi.rules.AvailabilityRules
 
 [mojo]: symfony bootstrap complete
 [mojo]: availability form is now loaded
@@ -72,6 +73,7 @@
 [mojo]: No rules to build
 [mojo]: =======================================================================================
 [mojo]: Rendering localized rules
+[mojo]: output...
 
 /*
   Class: kiwi.rules.AvailabilityRules

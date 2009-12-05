@@ -1,0 +1,20 @@
+$ mojo Behavior Scaffold --name=kiwi.behavior.SampleBehavior --author="Kyle Campbell" --description="This is a Sample Behavior"
+[mojo]: Generated Behavior Scaffolding to /home/kiwi/www/kiwi-web/web/js/kiwi/behavior/SampleBehavior.js
+[mojo]: output...
+
+/*
+  Class: kiwi.behavior.SampleBehavior
+  Author: Kyle
+  Description: This
+*/
+
+dojo.provide('kiwi.behavior.SampleBehavior');
+dojo.require('mojo.command.Behavior')
+
+dojo.declare('kiwi.behavior.SampleBehavior', mojo.command.Behavior,
+{
+  execute: function(args){
+
+
+  }
+});
