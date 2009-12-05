@@ -4,8 +4,8 @@ $ mojo Behavior Scaffold --name=kiwi.behavior.SampleBehavior --author="Kyle Camp
 
 /*
   Class: kiwi.behavior.SampleBehavior
-  Author: Kyle
-  Description: This
+  Author: Kyle Campbell
+  Description: This is a sample behavior
 */
 
 dojo.provide('kiwi.behavior.SampleBehavior');
