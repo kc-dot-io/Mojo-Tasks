@@ -2,9 +2,10 @@
 
 class MojoUtils extends Mojo
 {
-  public function __construct()
+  public function __construct($args)
   {
-
+    $this->args = $ags;
+    return $this;
   }
 
   static function getConfig($key)

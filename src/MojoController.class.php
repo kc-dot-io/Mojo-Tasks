@@ -10,9 +10,9 @@
 
 class MojoController extends Mojo
 {
-  function __construct($requestObj)
+  function __construct($args)
   {
-      $this->requestObj = $requestObj;
+      $this->args = $args;
       return $this;
   }
 
@@ -20,27 +20,27 @@ class MojoController extends Mojo
   {
 
       //Replace this with a validation method
-      if(empty($this->requestObj['name'])) 
+      if(empty($this->args['name'])) 
           return MojoUtils::prompt('Provide a full mojo path in your params string, ie: name=mojo.controller.myController');
 
-      if(strpos($this->requestObj['name'],'controller.') < 1)
+      if(strpos($this->args['name'],'controller.') < 1)
           return MojoUtils::prompt('The name you provided for your Controller appears to be incorrect. '
                               .'Please use full Controller path, ie: name=mojo.controller.myController');
-      $source = self::source();
+      $source = self::Source();
      
-      $name = explode('controller.',$this->requestObj['name']); 
-      MojoUtils::write(MojoUtils::getConfig('sf_mojo_dir').'controller/'.$name[1].'.js',MojoUtils::editStream($this->requestObj,$source));
+      $name = explode('controller.',$this->args['name']); 
+      MojoUtils::write(MojoUtils::getConfig('sf_mojo_dir').'controller/'.$name[1].'.js',MojoUtils::editStream($this->args,$source));
       MojoUtils::prompt('Generated Controller Scaffolding to '.MojoUtils::getConfig('sf_mojo_dir').'controller/'.$name[1].'.js');
   }
 
-  function source()
+  function Source()
   {
       ob_start();
 return <<<EOF
 /*
-        Class: %NAME%
-        Author: %AUTHOR%
-        Description: %DESCRIPTION%
+  Class: %NAME%
+  Author: %AUTHOR%
+  Description: %DESCRIPTION%
 */
 
 dojo.provide('%NAME%');

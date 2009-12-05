@@ -7,7 +7,7 @@
   {
     $mojo ="";
     //if you have your mojo lib in a diff set of libs set them here
-    $scan = array( 'lib','vendor','mojo','Mojo.class.php' );
+    $scan = array( 'lib','vendor','mojo', 'src', 'Mojo.class.php' );
     $dh = @opendir( $path );
     while( false !== ( $file = @readdir( $dh ) ) ){
         if( in_array( $file, $scan ) ){

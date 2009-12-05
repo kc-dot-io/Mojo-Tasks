@@ -2,6 +2,7 @@
 <?php
 
 require_once(dirname(__FILE__).'/MojoUtils.class.php');
+ini_set('error_reporting','E_ALL');
 
 class Mojo
 {
@@ -29,31 +30,30 @@ class Mojo
   function config()
   {
     //Change these paths to point to your project dirs
-    MojoUtils::setConfig('sf_lib_dir',dirname(__FILE__).'/');
-    MojoUtils::setConfig('sf_web_dir',dirname(__FILE__).'/../../../web');
+    MojoUtils::setConfig('sf_lib_dir',dirname(__FILE__).'');
+    MojoUtils::setConfig('sf_web_dir',dirname(__FILE__).'../../../web');
     MojoUtils::setConfig('sf_mojo_dir',MojoUtils::getConfig('sf_web_dir').'/js/kiwi/');
     MojoUtils::setConfig('sf_mojo_lib_dir',MojoUtils::getConfig('sf_lib_dir'));
   }
 
   function handler($arguments = array(), $options = array())
   {
-   
-    if(count($arguments) < 2 || array_key_exists("help",$options))
-       Mojo::exception("Acceptable use: $ mojo [Module] [Action] --name=(string) --author=(string) --description=(string)"," - HELP - ");
- 
-    $arguments["requestObj"] = array(
-         "name" => $options['name'],
-         "author" => $options['author'],
-         "description" => $options['description']
-    );
 
-    if(!class_exists($arguments['module']) && file_exists(MojoUtils::getConfig('sf_mojo_lib_dir').'Mojo'.$arguments['module'].'.class.php')){
+    $class = 'Mojo'.$arguments['module'];  
+    $action = $arguments['action'];
 
-      $class = 'Mojo'.$arguments['module'];  
-      $action = $arguments['action'];
+    if(file_exists(MojoUtils::getConfig('sf_mojo_lib_dir').'/'.$class.'.class.php')){
 
-      require(MojoUtils::getConfig('sf_lib_dir').$class.'.class.php');
-      $$class = new $class($arguments['requestObj']);
+      require(MojoUtils::getConfig('sf_lib_dir').'/'.$class.'.class.php');
+      $$class = new $class($options);
+
+      //if the module has a help method - run that, other wise, provide general
+      if(count($arguments) < 2 || array_key_exists("help",$options)){
+        echo method_exists($$class,"Help");
+
+        if(method_exists($$class,"Help")) $$class->Help();
+        else Mojo::exception("Acceptable use: $ mojo [Module] [Action] --name=(string) --author=(string) --description=(string)"," - HELP - ");
+      }
 
       if(method_exists($$class,$action)) $$class->$action();
       else Mojo::exception("You did not provide a mojo action or your mojo action doesn not exist");
@@ -65,7 +65,7 @@ class Mojo
 
   static function prompt($msg="")
   {
-    echo "[mojo]: ".$msg."\n\n";
+    echo "[mojo]: ".$msg."\n";
   }
 
   static function exception($msg="",$prefix=" - ERROR - ")
