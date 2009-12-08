@@ -13,9 +13,7 @@ class MojoSymfony extends Mojo
   function __construct($args)
   {
     require_once(dirname(__FILE__).'/../../../../config/ProjectConfiguration.class.php');
-    $configuration = ProjectConfiguration::getApplicationConfiguration('frontend', 'prod', true);
-    sfContext::createInstance($configuration);
-    new sfDatabaseManager($configuration);
+    $configuration = ProjectConfiguration::getApplicationConfiguration('frontend', 'prod', false);
 
     $this->args = $args;
     return $this;
@@ -161,7 +159,6 @@ class MojoSymfony extends Mojo
                   $this->args['rule'] = self::Source('is_required'); 
                   $this->args['params'] = "";
                   $str .= MojoUtils::editStream($this->args,self::Source('rule_start'));
-                  $str .= MojoUtils::editStream($this->args,self::Source('rule_end',$validators_end));
 
                 break;
                 case 'min': case 'min_length':
@@ -172,10 +169,10 @@ class MojoSymfony extends Mojo
                   $this->args['max'] = (empty($options['max_length']))?100:$options['max_length'];
                   $str .= MojoUtils::editStream($this->args,self::Source('rule_start'));
                   $str .= MojoUtils::editStream($this->args,self::Source('min_max'));
-                  $str .= MojoUtils::editStream($this->args,self::Source('rule_end',$validators_end));
 
                 break;
               }
+            $str .= MojoUtils::editStream($this->args,self::Source('rule_end',$validators_end));
             $validate_count++;
           }
           $str .= MojoUtils::editStream($this->args,self::Source('field_end',$rule_end));
@@ -242,7 +239,7 @@ EOF;
   return <<<EOF
       {
         "errorMsg": %MESSAGE%,
-        "rule": %RULE%
+        "rule": %RULE%,
 
 EOF;
       ob_end_flush();
@@ -279,7 +276,7 @@ EOF;
       break;
       case "is_length":
   return <<<EOF
-validate.isLength,
+validate.isLength
 EOF;
       ob_end_flush();
       break;
