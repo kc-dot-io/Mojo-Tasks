@@ -31,7 +31,7 @@ class Mojo
   {
     //Change these paths to point to your project dirs
     MojoUtils::setConfig('sf_lib_dir',dirname(__FILE__).'');
-    MojoUtils::setConfig('sf_web_dir',dirname(__FILE__).'../../../web');
+    MojoUtils::setConfig('sf_web_dir','/home/kiwi/www/kiwi-web/web');
     MojoUtils::setConfig('sf_mojo_dir',MojoUtils::getConfig('sf_web_dir').'/js/kiwi/');
     MojoUtils::setConfig('sf_mojo_lib_dir',MojoUtils::getConfig('sf_lib_dir'));
   }
