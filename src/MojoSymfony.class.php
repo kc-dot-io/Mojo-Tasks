@@ -13,7 +13,7 @@ class MojoSymfony extends Mojo
   function __construct($args)
   {
     require_once(dirname(__FILE__).'/../../../../config/ProjectConfiguration.class.php');
-    $configuration = ProjectConfiguration::getApplicationConfiguration('frontend', 'prod', true);
+    $configuration = ProjectConfiguration::getApplicationConfiguration('frontend', 'dev', true);
     sfContext::createInstance($configuration);
     new sfDatabaseManager($configuration);
 
@@ -49,45 +49,25 @@ class MojoSymfony extends Mojo
     
     $class = $this->args['form'];
     $form = new $class;
+    $embed = $this->args['embed'];
 
     Mojo::prompt($form->getName()." form is now loaded");
-
     $form->configure();
     Mojo::prompt($form->getName()." form is now configured");
-  
-    $schema = $form->getValidatorSchema();
-    Mojo::prompt($form->getName()." form schema is now ready");
 
     Mojo::prompt("=======================================================================================");
     Mojo::prompt("Analyzing form fields...");
 
-    $rules = array();
-    $rules[$form->getName()] = array();
+    $rules = self::getRules($form,$i18n);
 
-    foreach($schema->getFields() as $k => $v){
-      $rules[$form->getName()][$form->getName().'['.$k.']'] = array();
-      Mojo::prompt("-------------");
-      Mojo::prompt("Building rules for field: ".$form->getName().'['.$k.']');
-      Mojo::prompt("=======================================================================================");
-
-      $messages = $v->getMessages();
-      $options = $v->getOptions();
-        
-        Mojo::prompt("Rules to build:");
-        Mojo::prompt("-------------");
-        foreach($messages as $i => $j){
-            foreach($i18n->{'trans-unit'} as $t){
-              if((string)$t->source == (string)$messages[$i]){
-                $rules[$form->getName()][$form->getName().'['.$k.']'][$i]['value'] = (string)$t->target[0];
-                $rules[$form->getName()][$form->getName().'['.$k.']'][$i]['key'] = $messages[$i];
-                $rules[$form->getName()][$form->getName().'['.$k.']'][$i]['options'] = $options;
-                Mojo::prompt($form->getName().'['.$k.']'." - ".$t->target);
-              }
-            }
-        }
-        if(count($rules[$form->getName()][$form->getName().'['.$k.']']) < 1) Mojo::prompt("No rules to build");
-
+    if(isset($embed) && class_exists($embed)){
+        $eform = new $embed;
+        $eform->configure();
+        $erules = self::getRules($eform,$i18n,$form);
+        $rules[$form->getName()] = array_merge($rules[$form->getName()],$erules[$eform->getName()]);
     }
+
+#    print_r($rules); exit;
 
     $name = explode('rules.',$this->args['name']);
     $name = $name[1];
@@ -110,7 +90,51 @@ class MojoSymfony extends Mojo
     $written = MojoUtils::write(MojoUtils::getConfig('sf_mojo_dir')."rules/i18n/".$file,"var locData =".json_encode(self::printLocData($rules,$form)));
     if( $written > 0 ) Mojo::prompt("locData written to: ".MojoUtils::getConfig('sf_mojo_dir')."rules/i18n/".$file);
     else Mojo::prompt("There was an error writting to :".MojoUtils::getConfig('sf_mojo_dir')."rules/i18n/".$file);
+
+    Mojo::Prompt("DONE - ".$form->getName());
+    Mojo::prompt("\n\n=======================================================================================\n\n");
+    if(isset($this->args['debug'])) echo self::printRule($rules,$form);
     
+  }
+
+  function getRules($form,$i18n,$parent=false){
+    $rules = array();
+    $rules[$form->getName()] = array();
+    $schema = $form->getValidatorSchema();
+    $fields = $schema->getFields();
+
+    foreach($fields as $k => $v){
+      $rules[$form->getName()][$form->getName().'['.$k.']'] = array();
+      Mojo::prompt("-------------");
+      Mojo::prompt("Building rules for field: ".$form->getName().'['.$k.']');
+      Mojo::prompt("=======================================================================================");
+
+      $messages = $v->getMessages();
+      $options = $v->getOptions();
+      #print_r($messages);
+      #print_r($options);
+
+        Mojo::prompt("Rules to build:");
+        Mojo::prompt("-------------");
+        foreach($messages as $i => $j){
+            foreach($i18n->{'trans-unit'} as $t){
+              if((string)$t->source == (string)$messages[$i]){
+                if($parent == false){
+                  $rules[$form->getName()][$form->getName().'['.$k.']'][$i]['value'] = (string)$t->target[0];
+                  $rules[$form->getName()][$form->getName().'['.$k.']'][$i]['key'] = $messages[$i];
+                  $rules[$form->getName()][$form->getName().'['.$k.']'][$i]['options'] = $options;
+                  Mojo::prompt($form->getName().'['.$k.']'." - ".$t->target);
+                }else{
+                  $rules[$form->getName()][$parent->getName().'['.$form->getName().']['.$k.']'][$i]['value'] = (string)$t->target[0];
+                  $rules[$form->getName()][$parent->getName().'['.$form->getName().']['.$k.']'][$i]['key'] = $messages[$i];
+                  $rules[$form->getName()][$parent->getName().'['.$form->getName().']['.$k.']'][$i]['options'] = $options;
+                }
+              }
+            }
+        }
+        if(count($rules[$form->getName()][$form->getName().'['.$k.']']) < 1) Mojo::prompt("No rules to build");
+    }
+    return $rules;
   }
 
   function printLocData($rules,$form)
@@ -126,6 +150,7 @@ class MojoSymfony extends Mojo
 
   function printRule($rules,$form)
   {
+
       if(!isset($this->args['author'])) $this->args['author'] = 'Mojo Tasks - http://github.com/slajax/Mojo-Tasks';
       if(!isset($this->args['description'])) $this->args['description'] = 'Mojo Rules auto generated by Mojo Tasks';
     
@@ -141,8 +166,11 @@ class MojoSymfony extends Mojo
                     
         $this->args['field'] = $rule;
 
+#        print_r($validators);
+
         if( count($validators) > 0){
 
+          if($rule_count>1) $str .= MojoUtils::editStream($this->args,self::Source('comma'));
           $str .= MojoUtils::editStream($this->args,self::Source('field_start'));
 
           $validate_count=1;
@@ -154,6 +182,7 @@ class MojoSymfony extends Mojo
               //is this the last item in the arr?
               $validators_end = ( $validate_count == count($validators) )
                               ?true:false;
+
               switch($key){
                 case 'required':
 
@@ -174,6 +203,30 @@ class MojoSymfony extends Mojo
                   $str .= MojoUtils::editStream($this->args,self::Source('min_max'));
                   $str .= MojoUtils::editStream($this->args,self::Source('rule_end',$validators_end));
 
+                break;
+                case 'invalid': case 'match':
+                    switch(strtolower($value['key'])){
+                      case 'confirm_email_match': case 'confirm_email': case 'confirm_password': case 'match':                                                 
+
+                        $this->args['message'] = "locData.".$value['key'];
+                        $this->args['rule'] = self::Source('is_match');
+                        $this->args['match'] = str_replace("confirm","",str_replace("_","",$rule));
+                        $str .= MojoUtils::editStream($this->args,self::Source('rule_start'));
+                        $str .= MojoUtils::editStream($this->args,self::Source('match'));
+                        $str .= MojoUtils::editStream($this->args,self::Source('rule_end',$validators_end));
+
+                      break;
+                      case 'email_invalid':
+
+                        $this->args['message'] = "locData.".$value['key'];
+                        $this->args['rule'] = self::Source('is_match');
+                        $this->args['regex'] = $options['pattern'];
+                        $str .= MojoUtils::editStream($this->args,self::Source('rule_start'));
+                        $str .= MojoUtils::editStream($this->args,self::Source('regex'));
+                        $str .= MojoUtils::editStream($this->args,self::Source('rule_end',$validators_end));
+
+                      break;
+                  }
                 break;
               }
             $validate_count++;
@@ -211,13 +264,16 @@ EOF;
 
   return <<<EOF
 
-  ]
 };
 
 
 EOF;
       ob_end_flush();
       break;
+      case "comma":
+  return <<<EOF
+,
+EOF;
       case "field_start":
   return <<<EOF
 
@@ -227,15 +283,9 @@ EOF;
       ob_end_flush();
       break;
       case "field_end":
-if($end){
   return <<<EOF
     ]
 EOF;
-}else{
-  return <<<EOF
-    ],
-EOF;
-}
       ob_end_flush();
       break;
       case "rule_start":
@@ -271,6 +321,24 @@ EOF;
 EOF;
       ob_end_flush();
       break;
+      case "match":
+  return <<<EOF
+        "params": {
+            "ref": "%MATCH%"
+        }
+
+EOF;
+      ob_end_flush();
+      break;
+      case "regex":
+  return <<<EOF
+        "params": {
+            "regex": %REGEX%
+        }
+
+EOF;
+      ob_end_flush();
+      break;
       case "is_required":
   return <<<EOF
 validate.isRequired
@@ -289,7 +357,12 @@ validate.isType
 EOF;
       ob_end_flush();
       break;
-
+      case "is_match":
+  return <<<EOF
+validate.isMatch,
+EOF;
+      ob_end_flush();
+      break;
 
       default: return false; break;
     }
