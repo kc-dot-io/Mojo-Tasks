@@ -1,4 +1,4 @@
-#!/usr/bin/php -n
+#!/usr/bin/php -q
 <?php
 
   ini_set('error_reporting','E_ALL');
