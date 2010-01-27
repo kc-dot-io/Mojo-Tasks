@@ -42,21 +42,22 @@ class MojoConfig extends Mojo
   	}
   }
 
-  static function Setup(){
-		foreach($this->args as $key => $value){
-			$_SESSION[$key] = $value;
-			Mojo::prompt('Updating config for '.$key.' to '.$value);
-		}
-		MojoFile::write(self::get('mojo_task_lib').'mojo.config',json_encode($_SESSION));
-  } 
-
-	static function Clean(){
-		unlink(self::get('mojo_task_lib').'mojo.config');
-	}
-
   static function Help(){
-    echo "HELP";
-		exit;
+    Mojo::help('Usage: mojo Config Setup --mojo_js_dir="../relative/path/to"');
+    exit;
+  }
+
+  public function Setup(){
+    foreach($this->args as $key => $value){
+      $_SESSION[$key] = $value;
+      Mojo::prompt('Updating config for '.$key.' to '.$value);
+    }
+    MojoFile::write(self::get('mojo_task_lib').'mojo.config',json_encode($_SESSION));
+		echo "\n";
+  }
+
+  public function Clean(){
+    unlink(self::get('mojo_task_lib').'mojo.config');
   }
 }
 
