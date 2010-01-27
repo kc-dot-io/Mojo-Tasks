@@ -1,7 +1,4 @@
-#!/usr/bin/php -q
-<?php
-
-  ini_set('error_reporting','E_ALL');
+<?php  
 
   function getFile( $name = 'Mojo.class.php', $path = '.', $level = 0 )
   {
@@ -24,9 +21,5 @@
     @closedir( $dh );
     return $mojo;
   }
- 
-  array_shift($argv);  $cmd = "";
-  foreach($argv as $v) $cmd .= " ".$v;
-  passthru(getFile().$cmd);
 
 ?>

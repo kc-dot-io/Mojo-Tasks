@@ -27,12 +27,12 @@ class MojoRules extends Mojo
 
       if(strpos($name,'.') > -1) { //handle ruless in a sub dir
           $tmp = explode('.',$name); //check if this dir exists, and create it if it does not
-          if(!file_exists(MojoUtils::getConfig('sf_mojo_dir').'rules/'.$tmp[0])) mkdir(MojoUtils::getConfig('sf_mojo_dir').'rules/'.$tmp[0]);
+          if(!file_exists(MojoConfig::get('sf_mojo_dir').'rules/'.$tmp[0])) mkdir(MojoConfig::get('sf_mojo_dir').'rules/'.$tmp[0]);
           $name = $tmp[0].'/'.$tmp[1]; //full path including new dir
       }
 
-      MojoUtils::write(MojoUtils::getConfig('sf_mojo_dir').'rules/'.$name.'.js',MojoUtils::editStream($this->args,$source));
-      Mojo::prompt('Generated Rules Scaffolding to '.MojoUtils::getConfig('sf_mojo_dir').'rules/'.$name.'.js');
+      MojoFile::write(MojoConfig::get('sf_mojo_dir').'rules/'.$name.'.js',MojoFile::editStream($this->args,$source));
+      Mojo::prompt('Generated Rules Scaffolding to '.MojoConfig::get('sf_mojo_dir').'rules/'.$name.'.js');
   }
 
   function Source()

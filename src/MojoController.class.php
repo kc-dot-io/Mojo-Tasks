@@ -21,16 +21,16 @@ class MojoController extends Mojo
 
       //Replace this with a validation method
       if(empty($this->args['name'])) 
-          return MojoUtils::prompt('Provide a full mojo path in your params string, ie: name=mojo.controller.myController');
+          return Mojo::prompt('Provide a full mojo path in your params string, ie: name=mojo.controller.myController');
 
       if(strpos($this->args['name'],'controller.') < 1)
-          return MojoUtils::prompt('The name you provided for your Controller appears to be incorrect. '
+          return Mojo::prompt('The name you provided for your Controller appears to be incorrect. '
                               .'Please use full Controller path, ie: name=mojo.controller.myController');
       $source = self::Source();
      
       $name = explode('controller.',$this->args['name']); 
-      MojoUtils::write(MojoUtils::getConfig('sf_mojo_dir').'controller/'.$name[1].'.js',MojoUtils::editStream($this->args,$source));
-      MojoUtils::prompt('Generated Controller Scaffolding to '.MojoUtils::getConfig('sf_mojo_dir').'controller/'.$name[1].'.js');
+      MojoUtils::write(MojoConfig::get('sf_mojo_dir').'controller/'.$name[1].'.js',MojoFile::editStream($this->args,$source));
+      Mojo::prompt('Generated Controller Scaffolding to '.MojoConfig::get('sf_mojo_dir').'controller/'.$name[1].'.js');
   }
 
   function Source()

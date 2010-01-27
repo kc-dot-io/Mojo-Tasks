@@ -1,8 +1,11 @@
-#!/usr/bin/php -q
+#!/usr/bin/php -n
 <?php
 
-require_once(dirname(__FILE__).'/MojoUtils.class.php');
+require_once(dirname(__FILE__).'/MojoFunctions.php');
+require_once(dirname(__FILE__).'/MojoFile.class.php');
+require_once(dirname(__FILE__).'/MojoConfig.class.php');
 ini_set('error_reporting','E_ALL');
+ini_set("session.use_cookies", false);
 
 class Mojo
 {
@@ -23,17 +26,9 @@ class Mojo
         $arguments[$k] = $v;
       }
     } 
-    self::config();
-    self::handler($arguments,$options);
-  }
 
-  function config()
-  {
-    //Change these paths to point to your project dirs
-    MojoUtils::setConfig('sf_lib_dir',dirname(__FILE__).'');
-    MojoUtils::setConfig('sf_web_dir','/home/kiwi/www/kiwi-web/web');
-    MojoUtils::setConfig('sf_mojo_dir',MojoUtils::getConfig('sf_web_dir').'/js/kiwi/');
-    MojoUtils::setConfig('sf_mojo_lib_dir',MojoUtils::getConfig('sf_lib_dir'));
+  	MojoConfig::bootstrap();
+    self::handler($arguments,$options);
   }
 
   function handler($arguments = array(), $options = array())
@@ -42,9 +37,9 @@ class Mojo
     $class = 'Mojo'.$arguments['module'];  
     $action = $arguments['action'];
 
-    if(file_exists(MojoUtils::getConfig('sf_mojo_lib_dir').'/'.$class.'.class.php')){
+    if(file_exists(MojoConfig::get('mojo_task_lib').$class.'.class.php')){
 
-      require(MojoUtils::getConfig('sf_lib_dir').'/'.$class.'.class.php');
+      include_once(MojoConfig::get('mojo_task_lib').$class.'.class.php');
       $$class = new $class($options);
 
       //if the module has a help method - run that, other wise, provide general
@@ -73,7 +68,6 @@ class Mojo
     echo "\n[mojo]:".$prefix.$msg."\n\n";
     exit;
   }
-
 }
 
   new Mojo($argv);
