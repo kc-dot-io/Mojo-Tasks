@@ -3,6 +3,7 @@
 	function getFile( $name = 'Mojo.class.php', $path = '.', $level = 0 )
   {
 		$mojo = false;
+		$path = trim($path);
     //if you have your mojo lib in a diff set of libs set them here
     $scan = array( 'lib','vendor','src', 'Mojo-Tasks', 'mojo', $name );
     $dh = @opendir( $path );
@@ -21,6 +22,14 @@
     @closedir( $dh );
     return $mojo;
   }
+
+	function promptUser($question,$default)
+	{
+		echo "\n";
+		Mojo::prompt($question);
+		return fgets(STDIN);	
+		
+	}
 
 
 ?>

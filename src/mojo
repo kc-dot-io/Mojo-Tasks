@@ -27,6 +27,6 @@
  
   array_shift($argv);  $cmd = "";
   foreach($argv as $v) $cmd .= " ".$v;
-  passthru(getFile().$cmd);
+  passthru('php '.getFile().$cmd);
 
 ?>

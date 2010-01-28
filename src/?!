@@ -32,12 +32,8 @@ class MojoConfig extends Mojo
       echo "\n";
 			Mojo::prompt('Mojo Tasks initialized');
       Mojo::prompt('mojo.config created @ . '.$path.'mojo.config');
-      Mojo::prompt('Running Mojo setup...');
-			Mojo::prompt('==============================');
-			self::Setup();
-			Mojo::prompt('==============================');
+      Mojo::prompt('Please run "mojo Config Setup --help" to configure this tool');
       echo "\n";
-
       exit;
   	}
 
@@ -47,14 +43,14 @@ class MojoConfig extends Mojo
 			$_SESSION['mojo_config_loaded'] = true;
   	}
 
-		if(isset($args['action']) && $args['action'] != 'Setup' && $args['action'] != 'Clear')
+		if(isset($args['action']) && $args['action'] != 'Setup')
 			self::validate();
 
 	}
 	
 	static function validate()
 	{
-		if(self::get('mojo_js_dir')) 
+		if(self::get('mojo_js_dir') == false) 
 			Mojo::exception('Cannot find path to Mojo - please configure via  mojo Config Setup');
   }
 
@@ -66,41 +62,33 @@ class MojoConfig extends Mojo
 
   public function Setup()
 	{
+			$mojo = promptUser('Please provide a path to the directory the Mojo SiteMap.js exists in...');
+      echo $mojo;
 
-		$config = array();
-		$config['mojo_js_dir'] = promptUser('Please provide the full system path to your Mojo application - This is directory that contains SiteMap.js ');
-
-    foreach($config as $key => $value){
+/*
+    foreach($this->args as $key => $value){
 			switch($key){
 				case 'mojo_js_dir':
-					$sitemap = getFile('SiteMap.js',$value);
-
-					if($sitemap){ 
-						$value = str_replace(basename($sitemap),"",$sitemap);
-					}else{
-						self::Clear(0);
-						Mojo::exception('SiteMap.js not found at '.$value);
-					}
-
+				$sitemap = getFile('SiteMap.js',realpath($value));
+				if($sitemap) $value = str_replace(basename($sitemap),"",$sitemap);
+				else Mojo::exception('SiteMap.js not found at '.realpath($sitemap));
 				break;
 			}
       $_SESSION[$key] = $value;
 
-			echo "\n";		
       Mojo::prompt('Updating config for '.$key.' to '.$value);
-		}
 
     MojoFile::write(self::get('mojo_task_lib').'mojo.config',json_encode($_SESSION));
 
-		if(array_key_exists('mojo_js_dir',$config)) 
+		if(array_key_exists('mojo_js_dir',$this->args)) 
 			Mojo::exception('You can now use scaffolding, ex: mojo Behavior Scaffold --name="myapp.behavior.SampleBehavior" --description="Description" --author="You"',' - SUCCESS - ');
-
+*/
   }
 
-  public function Clear($prompt=false)
+  public function Clear()
 	{
-    if(unlink(self::get('mojo_task_lib').'mojo.config') && $prompt)
-			Mojo::exception('mojo.config removed',' - SUCCESS - ');
+    if(unlink(self::get('mojo_task_lib').'mojo.config'))
+			Mojo::exception('mojo.config removed','- SUCCESS -');
   }
 }
 

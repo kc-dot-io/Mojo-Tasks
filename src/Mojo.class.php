@@ -1,11 +1,10 @@
-#!/usr/bin/php -n
+#!/usr/bin/php -q
 <?php
 
 require_once(dirname(__FILE__).'/MojoFunctions.php');
 require_once(dirname(__FILE__).'/MojoFile.class.php');
 require_once(dirname(__FILE__).'/MojoConfig.class.php');
 ini_set('error_reporting','E_ALL');
-ini_set("session.use_cookies", false);
 
 class Mojo
 {
