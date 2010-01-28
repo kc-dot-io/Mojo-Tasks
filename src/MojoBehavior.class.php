@@ -35,7 +35,7 @@ class MojoBehavior extends Mojo
           $name = $tmp[0].'/'.$tmp[1]; //full path including new dir
       }
       MojoFile::write(MojoConfig::get('mojo_js_dir').'behavior/'.$name.'.js',MojoFile::editStream($this->args,$source));
-      Mojo::prompt('Generated Behavior Scaffolding to '.MojoConfig::get('mojo_js_dir').'behavior/'.$name.'.js');
+      Mojo::exception('Generated Behavior Scaffolding to '.MojoConfig::get('mojo_js_dir').'behavior/'.$name.'.js');
   }
 
   function Source()

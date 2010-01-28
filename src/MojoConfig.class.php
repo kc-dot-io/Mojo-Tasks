@@ -30,8 +30,9 @@ class MojoConfig extends Mojo
       MojoFile::write($path.'mojo.config',json_encode($_SESSION));
 
       echo "\n";
+			Mojo::prompt('Mojo Tasks initialized');
       Mojo::prompt('mojo.config created @ . '.$path.'mojo.config');
-      Mojo::prompt('Please run "mojo Config Setup --help" to configure this tool');
+      Mojo::prompt('Please run "mojo Config Update --help" to configure this tool');
       echo "\n";
       exit;
   	}
@@ -42,35 +43,48 @@ class MojoConfig extends Mojo
 			$_SESSION['mojo_config_loaded'] = true;
   	}
 
-		if(isset($args['action']) && $args['action'] != 'Setup')
+		if(isset($args['action']) && $args['action'] != 'Update')
 			self::validate();
 
 	}
 	
 	static function validate()
 	{
-		if(self::get('mojo_js_dir') == false) Mojo::exception('Cannot find config for mojo_js_dir - please configure via  mojo Config Setup');
+		if(self::get('mojo_js_dir') == false) Mojo::exception('Cannot find config for mojo_js_dir - please configure via  mojo Config Update');
   }
 
   static function Help()
 	{
-    Mojo::help('Usage: mojo Config Setup --mojo_js_dir="../relative/path/to"');
+    Mojo::help('Usage: mojo Config Update --mojo_js_dir="relative/path/to/tasks || /absolute/path/to" - This should be the SiteMap.js directory"');
     exit;
   }
 
-  public function Setup()
+  public function Update()
 	{
     foreach($this->args as $key => $value){
+			switch($key){
+				case 'mojo_js_dir':
+				$sitemap = getFile('SiteMap.js',realpath($value));
+				if($sitemap) $value = str_replace(basename($sitemap),"",$sitemap);
+				else Mojo::exception('SiteMap.js not found at '.realpath($sitemap));
+				break;
+			}
       $_SESSION[$key] = $value;
+
       Mojo::prompt('Updating config for '.$key.' to '.$value);
+
     }
+
     MojoFile::write(self::get('mojo_task_lib').'mojo.config',json_encode($_SESSION));
-		echo "\n";
+
+		if(array_key_exists('mojo_js_dir',$this->args)) 
+			Mojo::exception('You can now use scaffolding, ex: mojo Behavior Scaffold --name="myapp.behavior.SampleBehavior" --description="Description" --author="You"',' - SUCCESS - ');
   }
 
-  public function Clean()
+  public function Clear()
 	{
-    unlink(self::get('mojo_task_lib').'mojo.config');
+    if(unlink(self::get('mojo_task_lib').'mojo.config'))
+			Mojo::exception('mojo.config removed','- SUCCESS -');
   }
 }
 

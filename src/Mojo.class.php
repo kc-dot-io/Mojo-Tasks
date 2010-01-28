@@ -15,7 +15,7 @@ class Mojo
     array_shift($arguments);
     foreach($arguments as $k=>$v){
       if(strpos($v,"=") > -1 || strpos($v,"-") > -1){
-          $v = str_replace("-","",$v);
+          $v = str_replace("--","",$v);
           $split = explode("=",$v);
           $options[$split[0]] = $split[1];
       }else{
@@ -65,7 +65,7 @@ class Mojo
 
   static function exception($msg="",$prefix=" - ERROR - ")
   {
-    echo "\n[mojo]:".$prefix.$msg."\n\n";
+    echo "\n[mojo]:".$prefix.' '.$msg."\n\n";
     exit;
   }
 

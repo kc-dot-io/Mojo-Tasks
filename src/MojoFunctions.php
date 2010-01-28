@@ -1,10 +1,10 @@
 <?php  
 
-  function getFile( $name = 'Mojo.class.php', $path = '.', $level = 0 )
+	function getFile( $name = 'Mojo.class.php', $path = '.', $level = 0 )
   {
-    $mojo ="";
+		$mojo = false;
     //if you have your mojo lib in a diff set of libs set them here
-    $scan = array( 'lib','vendor','src', 'Mojo-Tasks', $name );
+    $scan = array( 'lib','vendor','src', 'Mojo-Tasks', 'mojo', $name );
     $dh = @opendir( $path );
     while( false !== ( $file = @readdir( $dh ) ) ){
         if( in_array( $file, $scan ) ){
@@ -21,5 +21,6 @@
     @closedir( $dh );
     return $mojo;
   }
+
 
 ?>
