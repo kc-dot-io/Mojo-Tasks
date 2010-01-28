@@ -21,7 +21,8 @@ class MojoConfig extends Mojo
     return;
   }
  
-  static function bootstrap(){
+  static function bootstrap($args)
+	{
     $path = str_replace(basename(__FILE__),"",getFile(basename(__FILE__)));
 	
     if(!file_exists($path.'mojo.config')){
@@ -40,14 +41,25 @@ class MojoConfig extends Mojo
 	    foreach($config as $key => $value) $_SESSION[$key] = $value;
 			$_SESSION['mojo_config_loaded'] = true;
   	}
+
+		if(isset($args['action']) && $args['action'] != 'Setup')
+			self::validate();
+
+	}
+	
+	static function validate()
+	{
+		if(self::get('mojo_js_dir') == false) Mojo::exception('Cannot find config for mojo_js_dir - please configure via  mojo Config Setup');
   }
 
-  static function Help(){
+  static function Help()
+	{
     Mojo::help('Usage: mojo Config Setup --mojo_js_dir="../relative/path/to"');
     exit;
   }
 
-  public function Setup(){
+  public function Setup()
+	{
     foreach($this->args as $key => $value){
       $_SESSION[$key] = $value;
       Mojo::prompt('Updating config for '.$key.' to '.$value);
@@ -56,7 +68,8 @@ class MojoConfig extends Mojo
 		echo "\n";
   }
 
-  public function Clean(){
+  public function Clean()
+	{
     unlink(self::get('mojo_task_lib').'mojo.config');
   }
 }
