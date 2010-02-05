@@ -53,7 +53,10 @@ class Mojo
       else self::exception("You did not provide a mojo action or your mojo action doesn not exist");
 
     }else{
-      self::exception("You did not provide a mojo module or your mojo module does not exist");  
+
+			if(MojoConfig::get('mojo_task_lib'))
+	      self::exception("You did not provide a mojo module or your mojo module does not exist");  
+			else MojoConfig::Setup();
     }
   }
 
