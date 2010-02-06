@@ -1,0 +1,512 @@
+
+the PHP/JavaScript interpreter
+¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+This document tries to describe as many of the internal data structures
+and processing mechanisms as possible - before the author forgets most
+of it again...
+
+
+
+$jsi_vars[]
+-----------
+Is an associative array of variables (names mapped to values). It is a
+deeply nested array of arrays for variables that are itself arrays or
+are in a namespace or part of an object instance itself.
+
+Some examples in JS-notation and in the actual $jsi_vars[] notation:
+
+   varname                  $js_vars["varname"]
+   class.var1               $js_vars["class"]["var1"]
+   class["var1"]            $js_vars["class"]["var1"]
+   wiki.page.saveBack()     $js_vars["wiki"]["page"]["saveBack"]
+
+The last is a function call, but functions are itself string variables,
+with the value of an allowed callable function (see $js_funcs[] array)
+associated to it.
+
+
+jsi_funcs[] array
+-----------------
+Contains a list of callable PHP functions. Most mathematical functions
+are safe to be called with unchecked parameters.
+
+
+global variables
+----------------
+The compiler, the interpreter and the runtime part use other global
+variables as well (some only temporarily though):
+
+jsc::
+   $tn - is the list of tokens, the lexigraphic analyzer emitted
+   $type,$next,$val,$nextval - contain tokens from the $tn list
+   $jsp_i - counter/position for the token list   
+
+all::
+   $bc - contains the "bytecode" (in reality only a parse tree)
+
+jsi::, jsa::, jsrt::
+   $jsi_vars - global variable scope of the interpreter
+   $jsi_lvars - stack of local variables (inside functions)
+   $jsi_sthis - stack of object references (this.)
+   $jsi_funcs - accessible host interpreter functions
+
+
+design decisions
+----------------
+  - eval() won't be implemented - while it may be possible to make it
+    work with some workarounds for the multiple global variables used
+    by compiler and interpreter
+  - a separate token->lineno association array could be introduced
+    (instead of lineno tokens in the stream), to make error messages
+    more useful to users - but that WOULD MAKE IT SLOWER
+
+
+
+JS_* constants
+--------------
+The constants (JS_*) don't need to be defined() explicitely, because PHP
+automatically makes strings of them the first time it sees them bare in
+the code. So leaving out the defines() by setting JS_FAST_CODE to 0,
+will yield far more readable "bytecode"; what OTH is slightly slower
+(and therefore disabled per default).
+
+The assigned integers have no special meaning or ordering, that's why
+the bytecode gets obsolete whenever you upgrade (new supported language
+constructs frequently require updating the randomly associated numbers).
+
+Some token names are only used in the parser/tokenizer but most identify
+language constructs for the interpreter.
+
+
+
+
+----------------------------------------------------------------------------
+
+
+
+the bytecode
+¯¯¯¯¯¯¯¯¯¯¯¯
+The bytecode (always in the global $bc variable) is of course optimized
+for easy evaluation/processing by the interpreter, which itself adapts the
+stream at runtime. The parser rearranges the code often to suit the small
+set of supported language constructs (which are simpler than the language
+features).
+
+The $bc array is first divided into all defined functions and the
+main code block identified as "."
+
+$bc = array(
+   "." => array(             // the main() code block is called "."
+      ...
+   ),
+   "def_js_func" => array(   // other functions are associated in the first
+      ...                    // level sub array using their given name
+   ),
+);
+
+Each block is a list of instructions or expressions the interpreter could
+execute line-by-line. Every expression or instruction is itself an sub
+array in that list. And code blocks can itself be part of some constructs
+(in for-loops or as if-else-code). The first element in every bytecode
+array entry always identifies (a JS_* constant) the token type.
+
+
+Expressions
+¯¯¯¯¯¯¯¯¯¯¯
+Are the most basic construct in every programming language, and in phpjs
+almost everything can be an expression. Expressions usually give a value
+back (regardless if that was used later). Also they are typically nested
+with other expressions.
+
+An expression is typically either a variable name, or a mathematical/bool
+calcualtion or a plain value.
+
+
+Code blocks
+¯¯¯¯¯¯¯¯¯¯¯
+Every array in the $bc structure is feed through the interpreters
+js_block() function, which walks through the entries and dispatches
+them to language construct and expression handlers (if there is an
+expression directly in a code block, then it is called a "void expression"
+because the result gets thrown away, typical for JS_ASSIGN).
+
+Also each code block (an array) can nest other code blocks (also arrays).
+That is, if you have something like the following in your code:
+
+{
+   {
+      {
+         x = x + 1;
+      }
+   }
+}
+
+it got converted into:  array( array( array( array(JS_ASSIGN, ...) ) ) ),
+while the interpreter indeed not really needs such constructs and the
+parser may omit them anyway in some cases.
+
+
+Assignments
+¯¯¯¯¯¯¯¯¯¯¯
+Always have two parameters, the first is always a variable name (so the
+JS_VAR is redundant here for ordinary variable names without array suffix)
+and the second is typically just a value or another var name or an
+expression like JS_MATH.
+
+...[0] = JS_ASSIGN
+...[1] = array( JS_VAR, "variable_name")
+...[2] = array( JS_VALUE, 17.222);
+
+
+Variables
+---------
+Variable names are packaged into their own sub-array to make them
+distinguishable from plain values, which often appear randomly in
+the $bc stream. Each variable token has at least a variable name,
+but can have multiple array index postfixes (itself expressions,
+most of the time being plain values).
+
+...[0] = JS_VAR
+...[1] = "varname"
+
+or something like
+
+...[0] = JS_VAR            // corresponds to "objectname.var"
+...[1] = "objectname"
+...[2] = "var"
+
+or for real arrays
+
+...[0] = JS_VAR            // parse tree of "$arrayname[2][$i]"
+...[1] = "arrayname"
+...[2] = array(JS_VALUE, 2, JS_INT)
+...[3] = array(JS_VAR, "i")
+
+
+Math expressions
+¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+Are most often seen as the second parameter in a JS_ASSIGN statement, and
+return the end result as expression value.
+
+...[0] = JS_MATH
+...[1] = array( JS_VAR, "anothervar" )
+...[2] = "+"
+...[3] = array( JS_VALUE, 53.772 )
+...[4] = "-"
+...[5] = array( JS_FCALL, ... )        // or any other expression again
+
+Every value, sub-expression or variable name is separated by an operator
+sign from each other - a JS_MATH typically has at least two sub-expressions,
+but the number is actually unlimited. The operations +- and */% are
+separated from each other by the parser already, so that you would never see
+them mixed in one JS_MATH expression array.
+
+The JS_MATH also handles some boolean (&&, ||) expressions
+
+...[0] = JS_MATH
+...[1] = array( JS_VAR, "anothervar" )
+...[2] = "||"
+...[3] = array( JS_CMP, ... )
+
+and bit-function operations like & and | or ^ and it even has support
+for a few unary operations (just one operand), where the parser takes
+care to only assign one single element to the JS_MATH array.
+
+
+Boolean math
+¯¯¯¯¯¯¯¯¯¯¯¯
+Have basically two operands whose values get compared. The operands
+can itself be expressions (but often are simply one variable and a
+value).
+
+...[0] = JS_CMP
+...[1] = array( JS_VAR, "var1" )
+...[2] = ">="
+...[3] = array( JS_MATH, ... )
+
+
+Function calls
+¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+A function call always has the desired function name as first parameter,
+and multiple others as parameters to the to be called function. The
+function name is thereby evaluated as variable name and the contents
+of that variable name instead match to an JS-function or a registered /
+allowed PHP-interface-function.
+
+...[0] = JS_FUNC
+...[1] = "function_name"
+...[2] = array( JS_VALUE, "param1" )
+...[3] = array( JS_VAR, "funcparam2_from_variable" )
+
+This expression of course returns the function return value as result ;)
+
+
+Language funtions
+¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+Language-builtin functions like "print" and "echo" have a relaxed call
+syntax in that they don't need paranthesis around parameters. Likewise
+they have specialized implementation in phpjs to accomodate that they
+can occour in an unlimited amount.
+
+...[0] = JS_RT
+...[1] = JS_PRINT              // limited no of language functions
+...[2] = array( JS_VAR, "param1" )
+...[3] = ...
+
+
+Conditional Loops
+¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+There are four types of conditional loops in phpjs, but not all have
+the same construct/representation. The three described herein share that
+they only have one condition to evaluate. The condition always is at
+bytecode position [2] and the to be executed code block at [3]:
+
+...[0] = JS_COND
+...[1] = JS_WHILE
+...[2] = array( JS_CMP, ... )
+...[3] = array( ... )             // a code block
+
+An $bc[1]=JS_DO - loop simply has the condition checked after execution
+of the code block.
+Whereas an $bc[1]=JS_IF is special in that it does not loop and could have
+multiple conditions and code blocks (a tree of them). Only one of the code
+blocks got executed though:
+
+...[0] = JS_COND
+...[1] = JS_IF
+...[2] = array( JS_CMP, ... )     // expression
+...[3] = array( ... )             // a code block
+...[4] = array( JS_CMP, ... )
+...[5] = array( ... )
+...[6] = array( JS_VALUE, true )  // the JS_ELSE tree
+...[7] = array( ... )
+
+
+For-Loops
+¯¯¯¯¯¯¯¯¯
+The parser formats the for loop constructs specially so that the
+interpreter doesn't have to deal with all too much of its semantics.
+Especially the first (init) parameter from the for(x=0; ...) isn't
+exactly keept - the parser separated it out before the for-loop
+construct (where it actually belongs).
+The to be executed code block is at $bc[3] while $bc[1] contains the
+break condition and $bc[2] the expression to be executed after the
+code block (should have better been merged into [3] by the parser,
+but whatever...)
+
+...[0] = JS_FOR
+...[1] = array( JS_CMP, ... )        // condition
+...[2] = array( JS_ASSIGN, ... )     // post-expression
+...[3] = array( ... )                // code block
+
+
+breaks
+¯¯¯¯¯¯
+All loop constructs take care of the JS_BREAK statement which has
+an optional count parameter:
+
+...[0] = JS_BREAK
+...[1] = 1                     // is set to 1 normally
+
+
+syntax conversion
+-----------------
+The parser knowns how to transform constructs like "x += 1" into the
+simpler language constructs the interpreter and bytecode formats allow.
+It even supports a few Pascal-language constructs "x := x + 1" by
+mapping them down to the known constructs again.
+
+
+
+
+---------------------------------------------------------------------------
+
+
+
+how compiler and interpreter work
+¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+The phpjs interpreter internally pre-converts scripts into a format very
+suitable for quick execution of the defined program structures and its
+associated data (instead of line-by-line matching and execution of
+program source code).
+
+The interpreter part heavily relies upon PHP managing most stuff, but
+it does not let PHP directly execute the generated "bytecode" (which
+actually should be called "parse tree", as it is not a real bytecode).
+
+
+compiling the source code
+¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+The compilation process consists of separating the input string into
+known language tokens (lexer), and then merging multiple tokens into
+syntactic structures (parser), which finally make up the resulting
+"bytecode". The (here) so called bytecode is in fact only an array of
+arrays, with well-known identifiers the interpreter can more easily
+take care of and can simply run through.
+
+
+lexer
+¯¯¯¯¯
+A "lexer" [see also flex(1)] separates an input stream into small chunks,
+and for example removes unnecassary whitespace from the initial source
+code. The tokens are limited in number and clearly ease the further
+analyzation of program structure.
+
+Tokens are detected with regular expression matching, but types are often
+changed later, after a more in-deep analyzation (or value conversion).
+
+The "parser" then fetches one token after another with jsp::get() from
+the global token variable $tn, which is simply a one-dimensional array
+of token type number (or symbolic names in _DEBUG mode) and their
+original or real (for constants) value.
+
+As an example:
+   array(
+      array(JS_WORD, "a"),
+      array(JS_ASSIGN, "="),
+      array(JS_WORD, "a"),
+      array(JS_OP_PLUS, "+"),
+      array(JS_VALUE, 1.7, JS_REAL),
+      array(JS_END, ";"),
+   )
+corresponded to the initial source code string '  a = a + 1.7;  '
+
+
+parser
+¯¯¯¯¯¯
+The parser works with a simple (one-item) look ahead procedure (it knows
+about the current token $type, and the $next one). This always is
+sufficient to determine the program and expression structure from the
+input token stream ($tn).
+
+   Expression and language construct parsing work a bit differently, in
+   that language construct (if, while, do, ...) analyzation works by
+   examining the $next token type accidently filled into $type - which
+   otherwise hold the current jsp_get() token type.
+
+the expression parsing works as follows:
+- jsp_expr_start() chains to the other expression look-ahead functions
+- the highest _expr parser function actually retrieves the current
+  element and must be a constant or variable or something that way
+- all other _expr functions check for operator characters/tokens around
+  constants or other expression constructs received from above, and else
+  return() to the previous expression parsing functions
+- so every parsing function either generates an array _including_ results
+  from a function it called, or directly returns that result
+- that way a tree (arrays of arrays) is returned, with multiply/division
+  and addition/subtraction expressions grouped into separate array levels
+  automatically
+- the ordering by which the parser functions may call each other
+  correspond 1:1 to the desired language syntax
+
+
+
+the generated "bytecode"
+¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+The so called "bytecode" in reality is only a parse tree (a real compiler
+would then transform it into flat bytecode or assembler source or even
+machine code). It is an array of arrays, which the interpreter can easily
+traverse in a very functional and recursive fashion (easy! easy! easy!).
+
+In the global '$bc' variable, that always contains that bytecode, you have
+first a level of function name blocks, with the name "." being reserved
+for the main program. Other $bc entries were user defined functions (but
+their names may not always match the function name in the source code).
+
+The interpeter usually starts examing the $bc["."] sub array. An entry
+is often another array, with its first [0] element determining the
+type of function (either an expression or a language construct).
+
+But to simply make an example:
+ $bc["."] = array(
+    0 => array(
+       JS_ASSIGN,
+       array(JS_WORD, "a"),
+       array(
+          JS_MATH,
+          array(JS_WORD, "a"),
+          "+",
+          array(JS_VALUE, 1.7, JS_REAL),
+       ),
+    ),
+    1 => array(
+       JS_RT,
+       JS_PRINT,
+       array(JS_WORD, "a"),
+    ),
+ );
+
+Would correspond to the simple source:
+<code>
+  a = a + 1;     // or simply a++;
+  echo a;
+</code>
+
+You may find it interesting to bail out the generated '$bc' variable
+using PHPs` print_r() function for some of your scripts from time to
+time.
+Note that the bytecode gets optimized (JS_VALUEs are collapsed) after
+the interpreter run over it the first time.
+
+
+
+interpreter
+¯¯¯¯¯¯¯¯¯¯¯
+All bytecode pieces either are expressions (JS_MATH, JS_CMP, JS_ASSIGN,
+JS_VALUE, JS_WORD, JS_FCALL, ...) handled by the mighty jsi::expr()
+function, or language constructs (like JS_IF, JS_FOR, ...) where a
+handler exists for each.
+
+The interpeters jsi::block() so simply starts looking at each entry of the
+$bc["."] array, and simply goes down the tree for sub arrays (which often
+were { code blocks } before). The language constructs have a well defined
+number of arguments, and the expressions (often arguments for constructs)
+can be nested without any limit - jsi::expr() takes care of this.
+
+Most expressions are of the JS_MATH token type, and handled in jsi::math().
+But as the parser already separated plus/minus and division/multiply into
+different array levels, they would never occour in one JS_MATH expression
+sub array at the same time. Therefore it is irrelevant that there is
+basically only jsi::math() and jsi::cmp() taking care of most expressions.
+
+...
+
+
+accelerator
+¯¯¯¯¯¯¯¯¯¯¯
+The accelerator (or "assembler" as we also frequently call it) transforms
+the parse parse tree (which we more blatantly call "bytecode") into PHP
+code, which is safe to execute, because it does never have access to
+global variables or all PHP functions. It instead accesses only variables
+within the $jsi_vars[] array, and functions allowed by the $jsi_funcs[]
+array settings.
+
+Calling jsa::assemble() method simply converts the parse tree back into
+a string of valid PHP code to be executed by the PHP interpreter itself;
+via the "eval()" language construct.
+
+The output changed significantly in version 0.01011 and uses references-
+throwing-around runtime functions now. It previously used the vanilla
+PHP assign = operator for expressions, and translated other JS bytecode
+constructs straight into their equivalents.
+Safetey is however still gained by only outputting escaped variable
+references (into $jsi_vars) and indirect function calls (only emulated
+or allowed ones accessible). The sandbox code cannot trigger PHP
+exceptions as it is clearly structured by how the jsa:: converter nests
+its generation calls recursively (the PHP code generation cannot yield
+invalid code, because of its limited and exactly defined feature set).
+
+Current code is a bit unreadable, and not all eventualities have been
+prove-checked. But we strongly believe, that nothing could go wrong here.
+
+PHP exceptions are impossible with strict code generation and indirect
+and determined function calls. Only sructural code loops (for, while,
+foreach, ...) could halt execution. One must either use PHPs tick()
+feature to slow and stop execution of sandbox code, or stick to injecting
+loop breakers in the jsa:: generation process (NOT YET SUPPORTED, means
+a slow down).
+Division by zero could be a problem, but PHP gracefully handles most of
+these faults.
+
+...
+

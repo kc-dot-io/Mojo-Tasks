@@ -1,0 +1,16 @@
+With the current release you shouldn't use the jsi:: interpreter
+part, because the jsc:: compiler was more tailored to support the
+jsa:: assembler/accelerator generated code. It contains one
+shortcut to safen the resulting php sandbox code in that strings
+are pre-escaped in the parser.
+
+You will need to comment out the line behind @WARNING1@ first to
+still use the older jsi:: interpreter. (This escaping is easily
+moved back into jsa::, but as that now runs nicely we don't want
+to break it accidently again.) But the simple js() and js_exec()
+interfaces now anyhow default to using jsa:: if it's loaded.
+
+The interpreter also is behind the jsa:: runtime in that it does
+not support the "var" statement and function definitions, not to
+speak of calls. There is also a few other things were it has not
+been brought on par yet, so take care.

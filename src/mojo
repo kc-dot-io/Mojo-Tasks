@@ -3,7 +3,7 @@
 
   ini_set('error_reporting','E_ALL');
 
-  function getFile( $name = 'Mojo.class.php', $path = '.', $level = 0 )
+  function getMojo( $name = 'Mojo.class.php', $path = '.', $level = 0 )
   {
     $mojo ="";
     //if you have your mojo lib in a diff set of libs set them here
@@ -12,7 +12,7 @@
     while( false !== ( $file = @readdir( $dh ) ) ){
         if( in_array( $file, $scan ) ){
             if( is_dir( "$path/$file" ) ){
-                return getFile( $name, "$path/$file", ($level+1) );
+                return getMojo( $name, "$path/$file", ($level+1) );
             } else {
                 if($file == $name){
                     $mojo = $path.'/'.$file;
@@ -27,6 +27,6 @@
  
   array_shift($argv);  $cmd = "";
   foreach($argv as $v) $cmd .= " ".$v;
-  passthru('php '.getFile().$cmd);
+  passthru('php '.getMojo().$cmd);
 
 ?>

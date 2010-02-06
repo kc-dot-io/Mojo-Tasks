@@ -1,0 +1,4 @@
+#!/bin/sh
+# combine all three parts into a single "phpjs.php" script
+grep -v 'require(' js.php  > phpjs.php
+cat jsrt.php js[cia]*.php >> phpjs.php

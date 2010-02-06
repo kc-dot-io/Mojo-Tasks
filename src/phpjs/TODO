@@ -1,0 +1,23 @@
+- still missing expressions:
+   - (a ? b : c)
+   - lambda functions
+- string expansion with PHP "...$variables...\n..." and backslash escaping
+   - needed to take place soley in the parser
+   - but only for $scalar/string variables
+- bring jsi:: on par with jsa::
+- implement local variable scopes differently:
+   - $jsi_lvars and $jsi_lvarstack
+   - or only $jsi_vars and $jsi_lvarstack, $jsi_hiddenglobalvars
+- object contexts and 'new' operator
+    - could be done by injecting [".type"] settings into array variable
+      entries of $js_vars[],
+    - and a secondary array would serve as mapping of function name vars
+      to real php/functions again (the object array entry and the type
+      array would simply be merged by jsi_get_var() so the _fcall() needed
+      few changes)
+    - gettype() would provide fallback information for standard variable
+      types and so allow support for String.*() and Integer.*() methods
+- function parameters pass-by-ref, only work for a limited number of
+  arguments currently?
+- get rid of premature string escaping in jsc:: again
+- fill jsrt:: with utility code and minimal JS API

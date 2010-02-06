@@ -1,0 +1,34 @@
+<?php
+#
+# doesn't work, bug in parser
+
+
+$source = '
+
+   writeLn("some smileys:");
+
+   for ($x=0; $x<=175; $x+=3)
+   {
+      if ((x % 2) == 1) {
+         print ":( ";
+      }
+      else {
+         print ":) ";
+      }
+   }
+
+   writeLn("");
+';
+
+
+#-- phpjs
+define("JS_DEBUG", 1);  # makes debug messages visible, when run first time
+include("js.php");
+
+#-- nothing more to do
+$e = jsa::assemble($source);
+echo $e;
+eval($e);
+#js_exec($source);
+
+?>

@@ -12,24 +12,46 @@ class MojoBuild extends Mojo
 {
   function __construct($args)
   {
-      $this->args = $args;
-      return $this;
+    $this->args = $args;
+    return $this;
   }
 
-	function readMap(){
+  function readMap(){
 
+    include "phpjs/js.php";
+    ini_set('error_reporting',0);
 
-			$sitemap = file_get_contents(MojoConfig::get('mojo_js_dir').'SiteMap.js');
+    $path = ""; //FIXME
+    $controllers = array();
+    $dependencies = array();
 
-			$arr = explode(MojoConfig::get('mojo_app_name').'.SiteMap = ',$sitemap );
+    jsc::compile(file_get_contents($path .'/SiteMap.js')); //FIXME
 
-			$map = str_replace('];',']',$arr[1]);
-			echo trim($map);
-//			$json = json_decode('{'.$map.'}');
+    foreach($bc['.'] as $k => $v){
 
+      if(isset($v[7])){
+       $controller = str_replace("'","",$v[7][2][1]);
+       $controller = join('/',explode('.',$controller)).'.js'; 
+       $controllers[] = $controller;      
+       if(!array_search($controller,$dependencies))
+          $dependencies[] = $controller;
+      }
+    }
 
-			
-	}
+    foreach($controllers as $controller){
+      $c = file_get_contents($path.$controller);
+      preg_match_all("/addCommand\([^\")](.*)[^\"]\)/",$c,$matches);
+      foreach($matches[1] as $commands => $command){
+        $command = str_replace("'","",$command);
+        $command = explode(", ",$command);
+        if(!empty($command[1]) && !array_search($command[1],$dependencies)) 
+          $dependencies[] = join('/',explode('.',$command[1])).'.js';
+      }
+    }
+
+    print_r($dependencies);
+
+  }
 
 }
 

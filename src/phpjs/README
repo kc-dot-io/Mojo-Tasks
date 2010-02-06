@@ -1,0 +1,508 @@
+
+CURRENT STATE: the jsi:: interpreter is not so useful right now, this
+release enhances the jsa:: part only, and no attention has been brought
+to compatibility yet. So please BEWARE that some things may not work as
+advertised herein.
+
+
+1 the php javascript interpreter
+  ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+This script code "interpreter" provides a JavaScript-like language,
+itself running inside the PHP interpreter (version 4 or later). The
+script code it supports is actually a mix of JS and PHP syntax (not
+all features can be supported at the same time, but compatibility
+completeness is not a goal).
+
+Of course it runs much slower than a real interpreter, because it
+itself is written in a scripting language. But it is in fact useful,
+because the script code it executes can be user-supplied, as it is
+always run safely encapsulated in a sandbox. You can still interface
+it with real PHP code and variables by providing interfaces and
+references.
+
+Using this technique makes especially sense in high end CMS and
+Hypertext Management Systems (WikiEngines), in that you can plug-in
+any code supplied through open interfaces without affecting server
+security. Server speed may in fact suffer (in comparison to native
+PHP code), so it shouldn't be used for core functionality. It also
+requires additional protections against longer running code loops
+(which are unpredictable or may be maliciously inserted). Otherwise
+there is little drawbacks to native code.
+
+http://phpjs.berlios.de/
+
+NOTE: This is still VERY EARLY ALPHA (in development). For the list
+of missing features, please see on top of the "js.php" library.
+
+
+1.1 toc
+    ¯¯¯
+   1     introduction
+   1.1   toc
+   1.2   acknowledgments
+   1.3   license
+   1.4   why?
+
+   2     usage overview
+   2.1   interfaces
+   2.2   bytecode buffering
+   2.3   utilizing the accelerator
+   2.4   constants/settings
+
+   3     extending
+   3.1   adding functions
+   3.2   adding variables
+
+   4     asorted notes
+   4.1   examples
+   4.2   optimizations
+   4.3   speed comparisions
+   4.4   changelog
+
+
+1.2 acknowledgements
+    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+This interpreter makes use of the techniques Jack W. Crenshaw layed out in
+his "Let's build a compiler!" series. That book is still available (free) for
+download and remains one of the most interesting writings on that topic. See
+also UseNet group news:comp.compilers or http://compilers.iecc.com/crenshaw/
+
+
+1.3 license
+    ¯¯¯¯¯¯¯
+ It is FreeWare, which means that it CAN BE USED with/in most projects
+ WITHOUT ANY RESTRICTIONS. It may be COPIED, MODIFIED, REDISTRIBUTED
+ as long as this paragraph is preserved. This license cannot be auto-
+ transformed into GNU GPL. For binary-only distributions(?) this whole
+ license shall shape into Public Domain (COMMERCIAL REUSE ALLOWED).
+
+ The author prefers GNU LGPL for anything that resembles a library of
+ any sort - that's the reasoning for the GPL discrimination rule. But
+ please!, simply contact the author for an exception.
+
+ If it's somewhat more feature-complete, this paragraph gets removed,
+ and the whole thing released as full and no-strings PD. This babbling
+ is all just to prevent premature forks (especially with non-library
+ licenses).
+
+ A rewrite of the script in any other programming language (Perl or
+ Python e.g.) of course frees it from any licensing issues or previous
+ copyright ownerships. (You can then choose your own, as always.)
+
+
+1.4 why?
+    ¯¯¯¯
+The initial reasoning for this interpreter was to allow interchanging
+of extension plugins between different WikiEngines, as it was an
+neutral interchange language for the various PHP, Perl and Python
+based implementations.
+
+It should be possible to port this to Perl with ease (and even Python
+seems feasible), once it is running. So this would clearly allow for
+WikiFeatures:AutomaticFeatureInstall and other niceties. However, how
+long this already has taken to become as minimally useful as it is now,
+there are no plans to relly port it to either language yet.
+
+
+
+
+
+
+
+2 usage overview
+  ¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+The so called interpreter is divided into different parts to make it
+easier to load only the appropriate components when neccessary:
+
+  js.php     the core script holds the minimal configuration and
+             run time settings, required by all other parts; if you
+             leave it out, then you'd simply get the slower (verbose)
+             bytecode and lose the js_exec() and js() interfaces
+
+  jsc.php    contains the compiler (lexer, parser), that transforms
+             script source code into very unoptimized 'bytecode' into
+             the global $bc[] variable
+
+  jsi.php    is the pure interpreter, which can walk over the bytecode
+             and execute and evaluate all commands and expressions it
+             finds therein - CURRENTLY NOT USEFUL
+
+  jsrt.php   runtime environment for the interpreter, must also be
+             loaded to execute scripts; provides interfaces to native
+             PHP functions
+
+  jsa.php    holds the accelerator post-compiler, which transforms the
+             bytecode into sandboxed PHP code that later can be executed
+             without the slower interpreter; does not conflict with jsi,
+             but nevertheless is meant as replacement for it
+
+To execute a script you only need to load the "js.php" script, which
+will automatically load the other four parts for you. (But you could use
+the 'mkbig' utility to join all five into one unified include script.)
+
+The "jsrt.php" is required for both, executing the bytecode via jsi::
+or executing the sandbox code produced by the jsa:: converter. It could
+as well have been merged with the main "js.php" script, but as the jsa
+transformed sandbox-php-code does not require the JS_* constants, it looks
+much cleaner this way.
+
+
+2.1 interfaces
+    ¯¯¯¯¯¯¯¯¯¯
+The interpreter can be activated through different function calls. You
+can also only run the compiler and accelerator, if you wish; but for
+convinvience you might want to use one of the two combined calls:
+
+   js_exec($src)
+   -------------
+      Passes the given script string to the parser and then runs the
+      interpreter. When the script runs all output will be directly
+      output with 'echo'.
+      Afterwards the "compiled" bytecode from the original script will
+      still be in the global '$bc'.
+
+   $output = js($src)
+   ------------------
+      Compiles and executes the given script code, but returns its
+      output as result string. If no $src string was given, an already
+      loaded '$bc' would be used instead.
+
+      Also this call tries to buffer the bytecode in a compressed (.gz)
+      serialized format. But see also JS_CACHE on how to control that.
+
+
+Compiler and interpreter can also be invoked separately, which may be
+useful for converting a script into bytecode, buffering it and running
+it at a later time (you just needed to load the compiler, and only the
+interpreter the other time).
+
+   jsc::compile($src)
+   ----------------
+      Only compiles the given $src code string into the global $bc[]
+      bytecode variable. Uses other global variables like $tn on the
+      way, but cleans most of it up afterwards.
+
+   jsi::run()
+   ---------
+      Executes the "bytecode" loaded in the global '$bc' variable. The
+      output generated in that script (with print... or document.write)
+      would be directly written to stdout/client (itself uses echo). The
+      loaded $bc will be more optimized, once the interpreter run on it.
+
+      Beware that the "jsrt.php" script needs to be loaded before you
+      invoke the interpreter, as otherwise no core functions will be
+      available (except "print()" which is a language construct).
+
+A better way to use phpjs is to convert the bytecode into sandboxed PHP
+code after parsing. Executing this sandbox code is safe and a lot faster
+than the older jsi:: interpreter. You have lesser control over how PHP
+interprets the code, but it's nevertheless the preferred method now:
+
+   jsa::assemble()
+   ---------------
+      Converts the loaded $bc[] (or given script source string) into
+      sandboxed PHP code for later execution via PHPs eval() construct.
+      But please see the "jsa.php" script for that.
+
+There is no js() shortcut for the latter variant, but it's easy to use
+anyhow. See paragraph 2.3 in this README.
+
+
+2.2 bytecode buffering
+    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+Instead of always passing the js_exec() function a string with source
+code to get executed, you should buffer the generated $bc bytecode and
+reuse it, if possible.  If you use the simplified js() call and set
+JS_CACHE correctly, then this is taken care of on your behalf. If you
+however would like to buffer the bytecode yourself, then you would
+run the parser/compiler and interpreter parts yourself in individual
+steps as follows:
+
+    1)  pass the source code to:
+
+          jsc::compile($string);
+
+    2)  save the generated pre-bytecode from the global "$bc"
+        variable (into a file or database)
+
+    3)  Then execute the compiled program, by loading the
+        pre-bytecode back into the global "$bc" variable,
+        and calling:
+
+          jsi::run();
+
+        (Of course you wouldn't reload the bytecode from disk
+        in the round you had actually generated it.)
+
+As additional hint: You could first let the code run (with jsi_run, js_exec
+or js_block), and afterwards save it. This way you would get the optimized
+code from $bc (which is still available after return from the interpreter).
+
+
+2.3 utilizing the accelerator
+    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+The accelerator (in "jsa.php") in fact complements the compiler, but you
+can also see it simply as replacement for the interpreter (jsi::run()
+calls). To benefit from the speed advantages it brings, you simply would
+do the following:
+
+  jsc::compile($js_source);
+  $php_code = jsa:assemble();  // from $bc
+  eval($php_code);
+
+or even shorter:
+
+  $php_code = jsa::assemble($js_source);
+  eval($php_code);
+
+The conversion is rather speedy, so you could postpone the final conversion
+step until you really need it. That is, you let jsc::compile() fill the $bc
+variable, buffer that, and feed it through eval(jsa::assemble()); when
+needed. This is only slightly slower than buffering the generated $php_code,
+but adds a lot to security, because it is rather harmless if someone
+injected faked bytecode by overwriting your cached files; other than if you
+would store the $php_code to disk and hope noone had write-permission to
+it (typical php setup in mind here).
+
+Keep in mind, that to compile existing bytecode, you needed to have "js.php"
+and "jsa.php" loaded. But to execute the resulting sandboxed $php_code, you
+needed to include the "jsrt.php" script.
+Therefore you could simply cache the transformed $php_code prefaced by a
+a copy of "jsrt.php" into one cache file to make it completely stand-alone.
+
+
+2.4 constants/settings
+    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+There is limited configurability in phpjs, but no real language behaviour
+switch until yet (even if JS_PHPMODE suggests this).
+
+JS_CACHE
+  is the directory name, which the 'js()' call uses for storing bytecode
+  for a given script string to later reuse it
+  Note: this directory must usually be world-writable in a webserver
+  environment (the shell/ftp thingy with "chmod 777 ..."); ALSO the
+  directory should be cleaned if you upgrade from an earlier release,
+  because the 'bytecode' constantly changes
+
+JS_DEBUG
+  enables a few print_r() and echo() statements throughout the code,
+  mainly used for development of the phpjs lib
+
+JS_FAST_CODE
+  selects, if the JS_* constants should be defined()
+  otherwise PHP will use the JS_* constant names as string scalars,
+  which yields larger but more readable bytecode (= eventually slower)
+
+JS_PHPMODE
+  is not used yet, won't ever be used, and probably removed in one of the
+  next versions;
+  some PHP and JS constructs are simply too divorced to support both
+  languages at the same time (emulation gets too complicated and error-
+  prone then), so we decided not to keep it PHP compatible (but of a few
+  very simple exceptions)
+
+
+
+
+
+
+3 extending
+  ¯¯¯¯¯¯¯¯¯
+The goal of phpjs is to allow integration into existing CMS for
+providing a sandboxed access to some of its features.
+
+So, whenever you add functions or variables you should keep in mind,
+not to comprimise your server security - or otherwise you could just
+have used eval() instead of phpjs. Especially bare *sql_query()
+functions shouldn't be made available from within the sandbox - rather
+make multiple wrapper functions for accessing small fragments and this
+read-only then.
+
+The jsi_mk_runtime_env() function is automatically invoked by jsi_run()
+and sets the most basic variables and functions. It however does not
+clear $jsi_vars and $jsi_funcs, so you can extend both at any time
+(even before a js_exec() call).
+
+For example:
+<code>
+   $jsi_vars["myvar"] = 37.5;
+   js("script...;");
+</code>
+Would run the given script with the variable "myvar" already defined.
+
+
+3.1 adding variables
+    ----------------
+The global $jsi_vars contains an associative array of variable names
+and values to be used inside the phpjs runtime/interpreter. You can
+add variable names to it, before you invoke jsi_run() [or js_exec()
+or others].
+
+You can also create variable references therein, the interpreter and
+PHP handle it transparently:
+
+  $jsi_vars["_REQUEST"] = &$_REQUEST;
+
+Would always keep the $_REQUEST array available inside the jscript for
+access (=value reading), *and* for modification (= changing $_REQUEST
+values).
+
+
+3.2 adding functions
+    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+Functions must be registered with $jsi_vars AND $jsi_funcs. The $jsi_funcs
+array thereby lists the system (PHP) functions, the running phpjs script
+may invoke (all others stay inaccessible). But because functions in JS
+are also objects/variables you also must list them in $jsi_vars,
+associating the JS/script function name to the real PHP function name.
+
+   $jsi_vars["myfunc"] = "php_function_name";
+   $jsi_funcs[] = "php_function_name";
+
+But you can also use the interpreter function registration call
+(with the first parameter being the script function name, and the
+second the real PHP function):
+
+   jsi_register_func("js.my_func", "strip_tags");
+
+From within a registered PHP function, you can then of course modify the
+"global" variables of the running script, by simply accessing $jsi_vars
+again.
+
+NOTE: parameter pass-by-ref is planned, but not yet implemented.
+
+
+
+
+
+
+
+4 asorted notes
+  ¯¯¯¯¯¯¯¯¯¯¯¯¯
+See INTERNALS for more in-deep informations on how phpjs operates.
+
+
+4.1 examples
+    ¯¯¯¯¯¯¯¯
+The interpreter accepts JavaScript-lookalike code:
+
+   js_exec('
+      for (i=0; i<5; $i+=1) 
+      {
+         document.writeLn("counting up," + " i = " + i);
+      }
+   ');
+
+But also PHP-like variables mixed in:
+
+   jsi_exec('
+
+      $mytime = system.time;
+      x = 1;
+
+      if (x == $x) {
+         document.write("The time is: ");
+         document.writeLn( $mytime() );
+      }
+
+   ');
+
+But please also note the list of missing features on top of the "js.php"
+script.
+
+
+4.2 optimizations
+    ¯¯¯¯¯¯¯¯¯¯¯¯¯
+Source will initially be transformed into an intermediate representation,
+a parse tree optimizied (or at least suiteable) for quick (or at least
+simple) interpretation (or at least something that way). This "pre-bytecode"
+should be stored for later reuse by the embeding application, to prevent
+reparsing the scripts each time they were to be run.
+
+It is possible to optimize the generated pre-bytecode. It is further
+possible to make real bytecode of it (Parrot, P-Code), though that may
+not yield better results at all, because the current way of doing things
+in reality lets the PHP engine do the real work (type handling and
+auto-conversion are almost like in JavaScript), what is rather speedy.
+
+It already features automatic code optimization during run time (the
+pseudo-bytecode gets smaller whenever the interpreter detects
+redundancies).
+
+
+4.3 speed comparisions
+    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+The parser in some tests only took around a fifth of the time required
+to execute a script, and the interpreter turned out to be rather fast
+in fact. The accelerator (sandboxed PHP code) will of course speed up
+the execution even more. However no meaningful tests have been done
+yet (what was written previously here was far too code specific).
+
+
+4.4 changelog
+    ¯¯¯¯¯¯¯¯¯
+0.00001
+- tokenizer and simple expression parsing work
+
+0.00010
+- PHP function calls enabled
+- interpreter working
+- license changed to FreeWare
+- added if() statement (and JS_CMP expression support in interpreter),
+  but also runtime/language functions
+
+0.00011
+- math expression parsing packaged into one function, recursive calls
+  driven by grammar data
+- introduction of numeric JS_ symbols (clean bytecode, faster execution)
+- some notes, inline doc
+
+0.00100
+- while and do constructs
+- more inline comments and explainations
+
+0.00101
+- initial README
+- first public release
+
+0.00110
+- unary operators ++ and -- are now supported (converted into 'var:=var+1')
+- also ~ and ! work now
+- README was overhauled
+- simplified interface 'js()' with caching support was added
+
+0.00111
+- $jsi_vars is now an array of arrays (for vars containing dots), what
+  now allows introduction of language array support
+- JS_WORD was changed into JS_VAR - but only for the interpreter part
+- release of addons/
+- minimal array support (for var names and assignments)
+
+0.01000
+- break; statement added
+- faster lexer, more precise token types (separated opening and closing braces)
+- allowed for unary + and - (but very inefficient for constants)
+
+0.01001
+- parameters to registered functions are passed by reference now, generally
+- fix in JS_IF tree handling (multiple could get executed)
+- introduction of the sandbox code generator jsa::
+- project moved onto BerliOS - http://developer.berlios.de/projects/phpjs
+- almost-PD licensing clearified (Anti-GPL and Pro-LGPL)
+
+0.01010 (= v0.3125)
+- separated out function registrations into 'jsrt.php' for reuse by jsa code
+- split main script into compiler, interpreter and remaining utility code
+- more speaking function names (::assert instead of ::expect, and ::want
+  as new shortcut)
+- added switch/case construct, fix in jsc::constr_break 
+- updated documentation
+
+0.01011 (by Eric Anderton)
+- this release enhances the jsa:: part only, the jsi:: falls behind
+- var statement and variable scopes (for a ColdFusion-like markup extension)
+- user function definitions and calls within JS scripts
+- new static class jsrt:: for sandbox (jsa) code enhancements
+- very different sandbox code gets generated (unreadable, eventually
+  slower, but likely more safer than plain PHP translation)
+- rewritten, fixed simple js() exec interface, uses jsa:: if there (Mario)

@@ -1,0 +1,12 @@
+<?php
+
+include("js.php");
+js_exec('
+
+   document.writeLn("Hello World!");
+
+', JSE_CACHE|JSE_ACCEL);
+
+#
+# this is always the first example
+?>
