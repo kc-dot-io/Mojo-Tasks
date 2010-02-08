@@ -21,11 +21,13 @@ class MojoBuild extends Mojo
     include "phpjs/js.php";
     ini_set('error_reporting',0);
 
-    $path = ""; //FIXME
+    $path = MojoConfig::get('mojo_js_dir'); //FIXME
     $controllers = array();
-    $dependencies = array();
-
-    jsc::compile(file_get_contents($path .'/SiteMap.js')); //FIXME
+    $dependencies = array();  
+    
+    echo file_get_contents($path .'SiteMap.js'); exit;
+   
+    jsc::compile(file_get_contents($path .'SiteMap.js')); //FIXME
 
     foreach($bc['.'] as $k => $v){
 

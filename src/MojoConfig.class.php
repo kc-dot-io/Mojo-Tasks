@@ -91,7 +91,7 @@ class MojoConfig extends Mojo
       $_SESSION[$key] = $value;
 
       echo "\n";		
-      Mojo::prompt('Updating config for '.$key.' to '.$value);
+      Mojo::prompt('Updated config for '.$key.' to '.$value);
     }
 
     MojoFile::write(self::get('mojo_task_lib').'mojo.config',json_encode($_SESSION));
@@ -106,6 +106,13 @@ class MojoConfig extends Mojo
     if(unlink(self::get('mojo_task_lib').'mojo.config') && $prompt)
       Mojo::exception('mojo.config removed',' - SUCCESS - ');
   }
+  
+  public function Show($value=false)
+  {
+    Mojo::prompt("Here is your current working config: \n");
+    print_r($_SESSION); echo "\n";
+    Mojo::prompt("To update a value use $ mojo Config Setup\n");
+  }  
 }
 
 ?>
