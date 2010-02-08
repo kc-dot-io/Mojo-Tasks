@@ -1,2 +1,0 @@
-[29-Jan-2010 23:10:27] PHP Fatal error:  Can't use function return value in write context in /home/slajax/public_html/development/Blast-Mojo/Mojo-Tasks/src/Mojo.class.php on line 56
-[05-Feb-2010 22:05:22] PHP Parse error:  syntax error, unexpected '}' in /home/slajax/public_html/development/Blast-Mojo/Mojo-Tasks/src/MojoConfig.class.php on line 53

@@ -1,4 +1,0 @@
-[28-Jan-2010 18:30:05] PHP Parse error:  syntax error, unexpected T_STRING, expecting T_FUNCTION in /home/slajax/public_html/development/Blast-Mojo/Mojo-Tasks/src/MojoConfig.class.php on line 83
-[28-Jan-2010 18:45:12] PHP Parse error:  syntax error, unexpected '$', expecting '&' or T_VARIABLE in /home/slajax/public_html/development/Blast-Mojo/Mojo-Tasks/src/MojoFunctions.php on line 25
-[28-Jan-2010 18:45:27] PHP Parse error:  syntax error, unexpected T_STRING, expecting T_FUNCTION in /home/slajax/public_html/development/Blast-Mojo/Mojo-Tasks/src/MojoConfig.class.php on line 82
-[28-Jan-2010 19:05:15] PHP Parse error:  syntax error, unexpected ';' in /home/slajax/public_html/development/Blast-Mojo/Mojo-Tasks/src/MojoConfig.class.php on line 74
