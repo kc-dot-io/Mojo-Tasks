@@ -9,6 +9,7 @@ ini_set('error_reporting','E_ALL');
 class Mojo
 {
 
+  public $config = array();
   function __construct($arguments = array(), $options = array()) 
   {
     array_shift($arguments);
