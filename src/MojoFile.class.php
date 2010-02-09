@@ -24,7 +24,25 @@ class MojoFile extends Mojo
     }
     return $written;
   }
-
+  
+  static function getAll($dir = false)
+  {
+    if($dir===false) return $dir;
+    $listDir = array();
+    if($handler = opendir($dir)) {
+        while (($sub = readdir($handler)) !== FALSE) {
+            if ($sub != "." && $sub != ".." && $sub != "Thumb.db" && $sub != ".svn") {
+                if(is_file($dir."/".$sub)) {
+                    $listDir[] = $sub;
+                }elseif(is_dir($dir."/".$sub)){
+                    $listDir[$sub] = self::getAll($dir."/".$sub);
+                }
+            }
+        }   
+        closedir($handler);
+    }
+    return $listDir;   
+  } 
 }
 
 ?>

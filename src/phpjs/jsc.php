@@ -34,8 +34,8 @@ class jsc {
 
       #-- parse into bytecode
       $rescue = array($type, $val, $next, $nextval, $jsp_i);
-      {
-         jsc::parse();
+      { 
+         jsc::parse(); 
       }
       if ($cleanup) {
          unset($GLOBALS["tn"]);
@@ -290,6 +290,7 @@ class jsc {
             $t = $str;
             $type = $val;
          }
+         if(JS_DEBUG)
          jsc::err("PARSE ERROR: '$t' expected, but '$type' seen @".($jsp_i-1)
                  . " by $caller");
       }
@@ -322,10 +323,9 @@ class jsc {
 
       #-- parse main program
       jsc::code_lines($bc["."]);
-
+  
       if (JS_DEBUG) {
-         echo "\ngenerated \$bytecode = ";
-         print_r($bc);
+         echo "\ngenerated \$bytecode = ";         
       }
    }
 
