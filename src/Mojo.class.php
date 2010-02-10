@@ -22,10 +22,10 @@ class Mojo
 			}else{
 				unset($arguments[$k]);
 				switch($k):
-				case 0: $k="module";break;
-				case 1: $k="action";break;
-								endswitch;
-								$arguments[$k] = $v;
+					case 0: $k="module";break;
+					case 1: $k="action";break;
+				endswitch;
+				$arguments[$k] = $v;
 			}
 		} 
 
