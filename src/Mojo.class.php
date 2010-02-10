@@ -44,8 +44,6 @@ class Mojo
 			include_once(MojoConfig::get('mojo_task_lib').$class.'.class.php');
 			$$class = new $class($options);
 
-
-			//if the module has a help method - run that, other wise, provide general
 			if(count($arguments) < 2 || array_key_exists("help",$options)){
 				if(method_exists($$class,"Help")) $$class->Help();
 				else MojoHelp::Docs();
