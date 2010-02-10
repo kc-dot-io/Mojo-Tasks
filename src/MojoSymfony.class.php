@@ -3,8 +3,7 @@
 /**
  * Symfony Tasks.
  *
- * @package    kiwi-web
- * @subpackage mojo - MojoSymfony
+ * @package    mojo
  * @author     Kyle Campbell
  */
 

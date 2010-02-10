@@ -3,8 +3,7 @@
 /**
  * Behavior Tasks.
  *
- * @package    kiwi-web
- * @subpackage mojo - MojoBehavior
+ * @package    mojo
  * @author     Kyle Campbell
  */
 

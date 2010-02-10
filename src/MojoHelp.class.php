@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * Help Class
+ *
+ * @package    mojo
+ * @author     Kyle Campbell
+ */
+
 class MojoHelp extends Mojo
 {
   function __construct($args){

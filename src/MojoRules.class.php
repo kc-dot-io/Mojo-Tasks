@@ -3,8 +3,7 @@
 /**
  * Rules Tasks.
  *
- * @package    kiwi-web
- * @subpackage mojo - MojoRules
+ * @package    mojo
  * @author     Kyle Campbell
  */
 

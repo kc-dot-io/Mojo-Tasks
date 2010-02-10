@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * Config Class
+ *
+ * @package    mojo
+ * @author     Kyle Campbell
+ */
+
 class MojoConfig extends Mojo
 {
   function __construct($args){
@@ -18,8 +25,13 @@ class MojoConfig extends Mojo
   {
     if(class_exists('sfConfig')) return sfConfig::set($key,$val);
     else $_SESSION[$key] = $val;
-    return;
+    return self::save();
   }
+
+  static function save(){
+    return self::Setup(false);
+  }
+
 
   static function bootstrap($args)
   {
@@ -65,14 +77,20 @@ class MojoConfig extends Mojo
     exit;
   }
 
-  public function Setup()
+  public function Setup($prompt=true)
   {
 
     $config = array();
-    $config['mojo_js_dir'] = promptUser('Please provide the full system path to your Mojo application - This is directory that contains SiteMap.js - (Include trailing slash)');
 
-    $arr = explode('/',$config['mojo_js_dir']);
-    $config['mojo_app_name'] = $arr[count($arr)-2];
+    if($prompt){
+			$config['mojo_js_dir'] = promptUser('Please provide the full system path to your Mojo application '
+					.'- This is directory that contains SiteMap.js - (Include trailing slash)');
+    	$arr = explode('/',$config['mojo_js_dir']);
+  	  $config['mojo_app_name'] = $arr[count($arr)-2];
+		}
+
+		$arr = explode('/',self::get('mojo_task_lib'));
+		$config['mojo_bin_dir'] = join("/",array_slice($arr,0,count($arr)-2)).'/bin/';
 
     foreach($config as $key => $value){
       switch($key){
@@ -91,13 +109,15 @@ class MojoConfig extends Mojo
       $_SESSION[$key] = $value;
 
       echo "\n";		
-      Mojo::prompt('Updated config for '.$key.' to '.$value);
+      if($prompt) Mojo::prompt('Updated config for '.$key.' to '.$value);
     }
 
     MojoFile::write(self::get('mojo_task_lib').'mojo.config',json_encode($_SESSION));
 
     if(array_key_exists('mojo_js_dir',$config)) 
-      Mojo::exception('You can now use scaffolding, ex: mojo Behavior Scaffold --name="myapp.behavior.SampleBehavior" --description="Description" --author="You"',' - SUCCESS - ');
+      Mojo::exception('You can now use scaffolding, '
+					.'ex: mojo Behavior Scaffold --name="myapp.behavior.SampleBehavior" --description="Description" --author="You"'
+			,' - SUCCESS - ');
 
   }
 

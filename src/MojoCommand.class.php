@@ -3,8 +3,7 @@
 /**
  * Command Tasks.
  *
- * @package    kiwi-web
- * @subpackage mojo - MojoCommand
+ * @package    mojo
  * @author     Kyle Campbell
  */
 
@@ -34,8 +33,8 @@ class MojoCommand extends Mojo
           if(!file_exists(MojoConfig::get('sf_mojo_dir').'command/'.$tmp[0])) mkdir(MojoConfig::get('sf_mojo_dir').'command/'.$tmp[0]);
           $name = $tmp[0].'/'.$tmp[1]; //full path including new dir
       }
-      MojoFile::write(MojoConfig::get('sf_mojo_dir').'command/'.$name.'.js',MojoFile::editStream($this->args,$source));
-      Mojo::prompt('Generated Command Scaffolding to '.MojoConfig::get('sf_mojo_dir').'command/'.$name.'.js'); 
+      MojoFile::write(MojoConfig::get('mojo_js_dir').'command/'.$name.'.js',MojoFile::editStream($this->args,$source));
+      Mojo::prompt('Generated Command Scaffolding to '.MojoConfig::get('mojo_js_dir').'command/'.$name.'.js'); 
   }
 
   function Source()
@@ -54,7 +53,9 @@ dojo.require('mojo.Model');
 
 dojo.declare('%NAME%', mojo.command.Command,
 {
-  execute: function(args) {
+  execute: function(requestObj) {
+
+		console.log('command executed',requestObj);
     
   },
   onResponse: function(data) {

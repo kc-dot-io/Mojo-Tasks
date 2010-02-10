@@ -27,7 +27,7 @@ class MojoController extends Mojo
           return Mojo::prompt('The name you provided for your Controller appears to be incorrect. '
                               .'Please use full Controller path, ie: name=mojo.controller.myController');
 
-      $source = self::Source();
+      $source = MojoFile::editStream(array('app_name'=>MojoConfig::get('mojo_app_name')),self::Source());
 
       $name = explode('controller.',$this->args['name']); 
 
@@ -54,14 +54,15 @@ dojo.declare('%NAME%', mojo.controller.Controller,
 
   },
   addObservers: function() {
-    this.addObserver('sample', 'onSample', 'do_sample', function(context, caller) { 
+    this.addObserver(this, 'onInit', 'do_sample', function(context, caller) { 
+			console.log('controller mapped');
       return {
 
       };
     });
   },
   addCommands: function() {
-    this.addCommand('do_sample', 'kiwi.command.sampleController');
+    this.addCommand('do_sample', '%APP_NAME%.command.SampleCommand');
   },
   addIntercepts: function() {
 

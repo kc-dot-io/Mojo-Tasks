@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * File Manipulation Class
+ *
+ * @package    mojo
+ * @author     Kyle Campbell
+ */
+
 class MojoFile extends Mojo
 {
   function __construct($args){
@@ -31,7 +38,7 @@ class MojoFile extends Mojo
     $listDir = array();
     if($handler = opendir($dir)) {
         while (($sub = readdir($handler)) !== FALSE) {
-            if ($sub != "." && $sub != ".." && $sub != "Thumb.db" && $sub != ".svn") {
+            if ($sub != '.' && $sub != '..' && $sub != '.svn') {
                 if(is_file($dir."/".$sub)) {
                     $listDir[] = $sub;
                 }elseif(is_dir($dir."/".$sub)){
