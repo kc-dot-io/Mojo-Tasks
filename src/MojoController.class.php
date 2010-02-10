@@ -3,8 +3,7 @@
 /**
  * Controller Tasks.
  *
- * @package    kiwi-web
- * @subpackage mojo - MojoController
+ * @package    mojo
  * @author     Kyle Campbell
  */
 

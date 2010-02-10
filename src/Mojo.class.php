@@ -4,6 +4,7 @@
 require_once(dirname(__FILE__).'/MojoFunctions.php');
 require_once(dirname(__FILE__).'/MojoFile.class.php');
 require_once(dirname(__FILE__).'/MojoConfig.class.php');
+require_once(dirname(__FILE__).'/MojoHelp.class.php');
 ini_set('error_reporting','E_ALL');
 
 class Mojo
@@ -47,16 +48,16 @@ class Mojo
       //if the module has a help method - run that, other wise, provide general
       if(count($arguments) < 2 || array_key_exists("help",$options)){
         if(method_exists($$class,"Help")) $$class->Help();
-        else self::exception("Acceptable use: $ mojo [Module] [Action] --name=(string) --author=(string) --description=(string)"," - HELP - ");
+        else MojoHelp::Docs();
       }
 
       if(method_exists($$class,$action)) $$class->$action();
-      else self::exception("You did not provide a mojo action or your mojo action doesn not exist");
+      else if(method_exists($$class,"Help")) $$class->Help();
+			else MojoHelp::Docs();
 
     }else{
 
-			if(MojoConfig::get('mojo_task_lib'))
-	      self::exception("You did not provide a mojo module or your mojo module does not exist");  
+			if(MojoConfig::get('mojo_task_lib')) MojoHelp::Docs();
 			else MojoConfig::Setup();
     }
   }
@@ -72,11 +73,10 @@ class Mojo
     exit;
   }
 
-  static function help($msg="",$prefix=" - HELP - ")
-  {
-		self::exception($msg,$prefix);
-    exit;
-  }
+	static function line($msg="\n")
+	{
+		echo $msg;
+	}
 
 }
 
