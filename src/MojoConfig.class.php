@@ -21,8 +21,9 @@ class MojoConfig extends Mojo
     else return false;
   }
 
-  static function set($key,$val)
+  static function set($key=false,$val=false)
   {
+		
     if(class_exists('sfConfig')) return sfConfig::set($key,$val);
     else $_SESSION[$key] = $val;
     return self::save();
@@ -45,9 +46,7 @@ class MojoConfig extends Mojo
       Mojo::prompt('Mojo Tasks initialized');
       Mojo::prompt('mojo.config created @ . '.$path.'mojo.config');
       Mojo::prompt('Running Mojo setup...');
-      Mojo::prompt('==============================');
       self::Setup();
-      Mojo::prompt('==============================');
       echo "\n";
 
       exit;
@@ -71,20 +70,17 @@ class MojoConfig extends Mojo
       Mojo::exception('Cannot find path to Mojo - please configure via  mojo Config Setup');
   }
 
-  static function Help()
-  {
-    Mojo::help('Usage: mojo Config Setup"');
-    exit;
-  }
-
   public function Setup($prompt=true)
   {
 
     $config = array();
+		foreach($_SESSION as $k => $v) $config[$k] = $v;
 
     if($prompt){
+
 			$config['mojo_js_dir'] = promptUser('Please provide the full system path to your Mojo application '
 					.'- This is directory that contains SiteMap.js - (Include trailing slash)');
+
     	$arr = explode('/',$config['mojo_js_dir']);
   	  $config['mojo_app_name'] = $arr[count($arr)-2];
 		}
@@ -107,18 +103,15 @@ class MojoConfig extends Mojo
           break;
       }
       $_SESSION[$key] = $value;
-
-      echo "\n";		
       if($prompt) Mojo::prompt('Updated config for '.$key.' to '.$value);
     }
 
     MojoFile::write(self::get('mojo_task_lib').'mojo.config',json_encode($_SESSION));
 
-    if(array_key_exists('mojo_js_dir',$config)) 
-      Mojo::exception('You can now use scaffolding, '
-					.'ex: mojo Behavior Scaffold --name="myapp.behavior.SampleBehavior" --description="Description" --author="You"'
-			,' - SUCCESS - ');
-
+    if(array_key_exists('mojo_js_dir',$config) && $prompt){
+      Mojo::prompt('Congratulations, your project is now setup, please read the docs below:');
+			MojoHelp::Docs();
+		}
   }
 
   public function Clear($prompt=true)
@@ -126,12 +119,22 @@ class MojoConfig extends Mojo
     if(unlink(self::get('mojo_task_lib').'mojo.config') && $prompt)
       Mojo::exception('mojo.config removed',' - SUCCESS - ');
   }
-  
+
+	public function Update(){
+		Mojo::line();
+		foreach($this->args as $k => $v){
+			$_SESSION[$k] = $v;
+			Mojo::prompt($k.' updated to '.$v);
+		}
+		Mojo::line();
+		self::save();
+	}  
+
   public function Show($value=false)
   {
-    Mojo::prompt("Here is your current working config: \n");
+    Mojo::prompt("\nHere is your current working configuration: \n");
     print_r($_SESSION); echo "\n";
-    Mojo::prompt("To update a value use $ mojo Config Setup\n");
+    Mojo::prompt("To update a value use $ mojo Config Update --key=value\n");
   }  
 }
 

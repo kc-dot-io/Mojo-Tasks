@@ -21,6 +21,7 @@ class MojoSymfony extends Mojo
   }
 
   function Help(){
+		Mojo::prompt("WARNING - This module is still in heavy alpha - use at own risk!");
     Mojo::exception("Acceptable use: $ mojo Symfony Translate --i18n=(./path/to/xml) --form=(string) --mojo_lib=(./path/to/mojo/install) --name=(string) --author=(string) --description=(string)"," - HELP - ");
   }
   
