@@ -48,7 +48,7 @@ class Mojo
       //if the module has a help method - run that, other wise, provide general
       if(count($arguments) < 2 || array_key_exists("help",$options)){
         if(method_exists($$class,"Help")) $$class->Help();
-        else MojoHelp::Docs();
+				else MojoHelp::Docs();
       }
 
       if(method_exists($$class,$action)) $$class->$action();
