@@ -23,7 +23,7 @@ class MojoConfig extends Mojo
 
   static function set($key=false,$val=false)
   {
-		
+
     if(class_exists('sfConfig')) return sfConfig::set($key,$val);
     else $_SESSION[$key] = $val;
     return self::save();
@@ -74,19 +74,19 @@ class MojoConfig extends Mojo
   {
 
     $config = array();
-		foreach($_SESSION as $k => $v) $config[$k] = $v;
+    foreach($_SESSION as $k => $v) $config[$k] = $v;
 
     if($prompt){
 
-			$config['mojo_js_dir'] = promptUser('Please provide the full system path to your Mojo application '
-					.'- This is directory that contains SiteMap.js - (Include trailing slash)');
+      $config['mojo_js_dir'] = promptUser('Please provide the full system path to your Mojo application '
+          .'- This is directory that contains SiteMap.js - (Include trailing slash)');
 
-    	$arr = explode('/',$config['mojo_js_dir']);
-  	  $config['mojo_app_name'] = $arr[count($arr)-2];
-		}
+      $arr = explode('/',$config['mojo_js_dir']);
+      $config['mojo_app_name'] = $arr[count($arr)-2];
+    }
 
-		$arr = explode('/',self::get('mojo_task_lib'));
-		$config['mojo_bin_dir'] = join("/",array_slice($arr,0,count($arr)-2)).'/bin/';
+    $arr = explode('/',self::get('mojo_task_lib'));
+    $config['mojo_bin_dir'] = join("/",array_slice($arr,0,count($arr)-2)).'/bin/';
 
     foreach($config as $key => $value){
       switch($key){
@@ -110,8 +110,8 @@ class MojoConfig extends Mojo
 
     if(array_key_exists('mojo_js_dir',$config) && $prompt){
       Mojo::prompt('Congratulations, your project is now setup, please read the docs below:');
-			MojoHelp::Docs();
-		}
+      MojoHelp::Docs();
+    }
   }
 
   public function Clear($prompt=true)
@@ -120,19 +120,20 @@ class MojoConfig extends Mojo
       Mojo::exception('mojo.config removed',' - SUCCESS - ');
   }
 
-	public function Update(){
-		Mojo::line();
-		foreach($this->args as $k => $v){
-			$_SESSION[$k] = $v;
-			Mojo::prompt($k.' updated to '.$v);
-		}
-		Mojo::line();
-		self::save();
-	}  
+  public function Update(){
+    Mojo::line();
+    foreach($this->args as $k => $v){
+      $_SESSION[$k] = $v;
+      Mojo::prompt($k.' updated to '.$v);
+    }
+    Mojo::line();
+    self::save();
+  }  
 
   public function Show($value=false)
   {
-    Mojo::prompt("\nHere is your current working configuration: \n");
+    Mojo::line();
+    Mojo::prompt("Here is your current working configuration: \n");
     print_r($_SESSION); echo "\n";
     Mojo::prompt("To update a value use $ mojo Config Update --key=value\n");
   }  
