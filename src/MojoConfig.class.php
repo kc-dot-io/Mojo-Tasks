@@ -66,7 +66,8 @@ class MojoConfig extends Mojo
   static function validate()
   {
 
-    if(self::get('mojo_js_dir') ===  false) 
+    $js_dir = self::get('mojo_js_dir');
+    if($js_dir ===  false) 
       Mojo::exception('Cannot find path to Mojo - please configure via  mojo Config Setup');
   }
 
@@ -81,12 +82,12 @@ class MojoConfig extends Mojo
       $config['mojo_js_dir'] = promptUser('Please provide the full system path to your Mojo application '
           .'- This is directory that contains SiteMap.js - (Include trailing slash)');
 
-      $arr = explode('/',$config['mojo_js_dir']);
+      $arr = explode(DIRECTORY_SEPARATOR,$config['mojo_js_dir']);
       $config['mojo_app_name'] = $arr[count($arr)-2];
     }
 
-    $arr = explode('/',self::get('mojo_task_lib'));
-    $config['mojo_bin_dir'] = join("/",array_slice($arr,0,count($arr)-2)).'/bin/';
+    $arr = explode(DIRECTORY_SEPARATOR,self::get('mojo_task_lib'));
+    $config['mojo_bin_dir'] = join(DIRECTORY_SEPARATOR,array_slice($arr,0,count($arr)-2)).DIRECTORY_SEPARATOR.'bin'.DIRECTORY_SEPARATOR ;
 
     foreach($config as $key => $value){
       switch($key){

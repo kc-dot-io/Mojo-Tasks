@@ -37,10 +37,11 @@ class MojoHelp extends Mojo
     Mojo::line("\n------------------------------------------------\n\n");
     Mojo::prompt("BUILDING / COMPRESSING");
     Mojo::line();
-    Mojo::prompt("$./mojo Build Compress --overwrite=true|false");
+    Mojo::prompt("$./mojo Build Compress --overwrite=true --debug=true");
     Mojo::prompt("@params:");
     Mojo::prompt("	overwrite - will stop the out put of the build from incrementing");
     Mojo::prompt("	ex: mojojsdir/dist/1/application.js will not increment to 2");
+    Mojo::prompt("	debug - will show the list of dependencies");
     Mojo::line();
     exit;
   }
