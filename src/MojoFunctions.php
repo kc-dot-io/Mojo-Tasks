@@ -14,10 +14,10 @@ function getFile( $name = 'Mojo.class.php', $path = '.', $level = 0 )
   while( false !== ( $file = @readdir( $dh ) ) ){
     if( in_array( $file, $scan ) ){
       if( is_dir( "$path/$file" ) ){
-        return getFile( $name, "$path/$file", ($level+1) );
+        return getFile( $name, $path.DIRECTORY_SEPARATOR .$file, ($level+1) );
       } else {
         if($file == $name){
-          $target = $path.'/'.$file;
+          $target = $path.DIRECTORY_SEPARATOR.$file;
           return realpath($target);
         }
       }
