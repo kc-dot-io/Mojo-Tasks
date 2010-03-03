@@ -40,7 +40,6 @@ class Mojo
       }
     } 
 
-    print_r($options); exit;
     MojoConfig::bootstrap($arguments);
     self::handler($arguments,$options);
   }
