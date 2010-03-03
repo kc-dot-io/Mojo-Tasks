@@ -1,3 +1,4 @@
+
 <?php
 
 /**
@@ -197,4 +198,3 @@ class MojoBuild extends Mojo
 }
 
 ?>
-
