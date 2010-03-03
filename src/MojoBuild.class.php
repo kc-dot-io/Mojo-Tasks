@@ -1,4 +1,7 @@
+<<<<<<< Updated upstream:src/MojoBuild.class.php
 
+=======
+>>>>>>> Stashed changes:src/MojoBuild.class.php
 <?php
 
 /**

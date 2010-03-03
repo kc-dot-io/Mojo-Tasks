@@ -15,20 +15,32 @@ class Mojo
   {
     array_shift($arguments);
     foreach($arguments as $k=>$v){
-      if(strpos($v,"=") > -1 || strpos($v,"--") > -1){
+
+      if(strpos($v,"=") > -1 || strpos($v,"--") > -1)
+      {      
         $v = str_replace("--","",$v);
         $split = explode("=",$v);
         $options[$split[0]] = $split[1];
-      }else{
+        
+        for($i=($k+1);$i<=count($arguments);$i++)
+        {
+          if(strpos($arguments[$i],"--") > -1) break;          
+          $options[$split[0]] .= " ".$arguments[$i];
+        }
+      }
+      
+      if($k < 2)
+      {
         unset($arguments[$k]);
         switch($k):
-        case 0: $k="module";break;
-        case 1: $k="action";break;
-                endswitch;
-                $arguments[$k] = $v;
+          case 0: $k="module";break;
+          case 1: $k="action";break;
+        endswitch;
+        $arguments[$k] = $v;
       }
     } 
 
+    print_r($options); exit;
     MojoConfig::bootstrap($arguments);
     self::handler($arguments,$options);
   }
@@ -81,3 +93,5 @@ class Mojo
 }
 
 new Mojo($argv);
+
+?>

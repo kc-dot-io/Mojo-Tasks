@@ -35,5 +35,4 @@ function promptUser($question,$default)
 
 }
 
-
 ?>

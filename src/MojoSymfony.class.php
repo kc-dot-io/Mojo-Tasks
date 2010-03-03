@@ -13,7 +13,14 @@ class MojoSymfony extends Mojo
   {
     require_once(dirname(__FILE__).'/../../../../config/ProjectConfiguration.class.php');
     $configuration = ProjectConfiguration::getApplicationConfiguration('frontend', 'dev', true);
+<<<<<<< Updated upstream:src/MojoSymfony.class.php
     sfContext::createInstance($configuration);
+=======
+    kcContext::createInstance($configuration);
+    
+    //This line doesn't make sense, why are we not assigning this to anything, and more 
+    // importantly, why are we not using sfContext to handle the database manager?
+>>>>>>> Stashed changes:src/MojoSymfony.class.php
     new sfDatabaseManager($configuration);
 
     $this->args = $args;
