@@ -1,7 +1,3 @@
-<<<<<<< Updated upstream:src/MojoBuild.class.php
-
-=======
->>>>>>> Stashed changes:src/MojoBuild.class.php
 <?php
 
 /**
@@ -40,8 +36,8 @@ class MojoBuild extends Mojo
   //==============================================
 
 	//==============================================
-    $base = MojoConfig::get('mojo_base_dependencies');
-    
+    $base = MojoConfig::get('mojo_'.(!empty($app)?strtolower(trim($app)).'_':'').'base_dependencies');
+        
     if(isset($base) ){
       $base = str_replace("/",DIRECTORY_SEPARATOR,$base);
       $base = explode(',',$base);      
@@ -112,20 +108,20 @@ class MojoBuild extends Mojo
 	//==============================================
     
 	//==============================================
-
-    $i18n = MojoFile::getAll(MojoConfig::get('mojo_js_dir').'_i18n'.DIRECTORY_SEPARATOR);
     
+    $locale = (!empty($this->args['locale']))?$this->args['locale']:'en_US';
+    
+    $i18n = MojoFile::getAll(MojoConfig::get('mojo_js_dir').'_i18n'.DIRECTORY_SEPARATOR.$locale.DIRECTORY_SEPARATOR);
+          
     foreach($rules as $rule){
       $c = file_get_contents($rule);      
       preg_match_all("/\\.locale[^\"]*\"\.([^\"]*)\"/",$c,$matches);      
 
-      foreach($i18n as $locale => $files){
-        foreach($files as $file){
+      foreach($i18n as $files => $file){
         
           $f = $js_dir.MojoConfig::get('mojo_app_name').DIRECTORY_SEPARATOR.'_i18n'.DIRECTORY_SEPARATOR.$locale.DIRECTORY_SEPARATOR.$file;
           if((strpos($file,$matches[1][0]) > -1) && !array_search($f,$dependencies))
             $dependencies[] = $f;            
-        }
       }
       
       if(!array_search($rule,$dependencies))
@@ -175,26 +171,33 @@ class MojoBuild extends Mojo
 	//===============================================
 
 	//===============================================
+  
+    $app = (!empty($app))?$app.'.':'main.';
+    $locale = strtolower($locale).'.';
+    $build = MojoConfig::get('mojo_build_number');    
+    $build = (!empty($build))?$build:'0';
+    
+    if(!isset($this->args['overwrite'])) $build++;
 
-		$build = MojoConfig::get('mojo_build_number');
-		if(empty($build)) $build = '0';
-		if(!isset($this->args['overwrite'])) $build++;
+    if(!is_dir($js_dir.'dist'.DIRECTORY_SEPARATOR)) mkdir($js_dir.'dist'.DIRECTORY_SEPARATOR);
+    if(!is_dir($js_dir.'dist'.DIRECTORY_SEPARATOR.$build.DIRECTORY_SEPARATOR)) mkdir($js_dir.'dist'.DIRECTORY_SEPARATOR.$build.DIRECTORY_SEPARATOR);
 
-		if(!is_dir($js_dir.'dist'.DIRECTORY_SEPARATOR)) mkdir($js_dir.'dist'.DIRECTORY_SEPARATOR);
-		if(!is_dir($js_dir.'dist'.DIRECTORY_SEPARATOR.$build.DIRECTORY_SEPARATOR)) mkdir($js_dir.'dist'.DIRECTORY_SEPARATOR.$build.DIRECTORY_SEPARATOR);
+    MojoConfig::set('mojo_build_number',$build);
 
-		MojoConfig::set('mojo_build_number',$build);
+    if(MojoFile::write($js_dir.'dist'.DIRECTORY_SEPARATOR.$build.DIRECTORY_SEPARATOR.'application.'.$app.$locale.'uncompressed.js',$js))
+      Mojo::prompt('application.'.$app.$locale.'uncompressed.js written to '.$js_dir.'dist'.DIRECTORY_SEPARATOR.$build.DIRECTORY_SEPARATOR.'application.'.$app.$locale.'uncompressed.js');
 
-    if(MojoFile::write($js_dir.'dist'.DIRECTORY_SEPARATOR.$build.DIRECTORY_SEPARATOR.'application.uncompressed.js',$js))
-      Mojo::prompt('application.uncompressed.js written to '.$js_dir.'dist'.DIRECTORY_SEPARATOR.$build.DIRECTORY_SEPARATOR.'application.uncompressed.js');
-   
-    Mojo::prompt('YUI Compressing application.uncompressed.js to '
-				.$js_dir.'dist'.DIRECTORY_SEPARATOR.$build.DIRECTORY_SEPARATOR.'application.js');
+    Mojo::prompt('YUI Compressing application.'.$app.$locale.'uncompressed.js to '
+        .$js_dir.'dist'.DIRECTORY_SEPARATOR.$build.DIRECTORY_SEPARATOR.'application.'.$app.$locale.'js');
 
     passthru('java -jar '.MojoConfig::get('mojo_bin_dir').'yui.jar '
-				.$js_dir.'dist'.DIRECTORY_SEPARATOR.$build.DIRECTORY_SEPARATOR.'application.uncompressed.js -o '
-				.$js_dir.'dist'.DIRECTORY_SEPARATOR.$build.DIRECTORY_SEPARATOR.'application.js --charset UTF-8')."\n";
+        .$js_dir.'dist'.DIRECTORY_SEPARATOR.$build.DIRECTORY_SEPARATOR.'application.'.$app.$locale.'uncompressed.js -o '
+        .$js_dir.'dist'.DIRECTORY_SEPARATOR.$build.DIRECTORY_SEPARATOR.'application.'.$app.$locale.'js --charset UTF-8')."\n";
 
+    if($this->args['deploy']){
+      Mojo::prompt('Copying to deploy directory: '.$js_dir.DIRECTORY_SEPARATOR.$this->args['deploy']);
+      passthru('cp '.$js_dir.'dist'.DIRECTORY_SEPARATOR.$build.DIRECTORY_SEPARATOR.'application.'.$app.$locale.'js '.$js_dir.DIRECTORY_SEPARATOR.$this->args['deploy']);
+    }
 	//===============================================
     
   }

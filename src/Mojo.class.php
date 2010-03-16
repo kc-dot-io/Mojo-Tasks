@@ -56,14 +56,11 @@ class Mojo
       $$class = new $class($options);
 
       if(count($arguments) < 2 || array_key_exists("help",$options)){
-        if(method_exists($$class,"Help")) $$class->Help();
-        else if(MojoConfig::get('mojo_task_lib')) MojoHelp::Docs();
+        if(method_exists($$class,"Help")) $$class->Help();       
         else MojoHelp::Setup();
       }
 
       if(method_exists($$class,$action)) $$class->$action();
-      else if(method_exists($$class,"Help")) $$class->Help();
-      else if(MojoConfig::get('mojo_task_lib')) MojoHelp::Docs();
       else MojoConfig::Setup();
 
     }else{

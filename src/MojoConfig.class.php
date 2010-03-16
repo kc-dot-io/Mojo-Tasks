@@ -36,8 +36,9 @@ class MojoConfig extends Mojo
 
   static function bootstrap($args)
   {
-    $path = str_replace(basename(__FILE__),"",getFile(basename(__FILE__)));
-
+  
+    $path = str_replace(basename(__FILE__),"",realpath(__FILE__));
+   
     if(!file_exists($path.'mojo.config')){
       $_SESSION['mojo_task_lib'] = $path;
       MojoFile::write($path.'mojo.config',json_encode($_SESSION));
@@ -51,11 +52,16 @@ class MojoConfig extends Mojo
 
       exit;
     }
-
+    
+   
     if(self::get('mojo_config_loaded') == false){
       $config = json_decode(file_get_contents($path.'mojo.config'));
       foreach($config as $key => $value) $_SESSION[$key] = $value;
       $_SESSION['mojo_config_loaded'] = true;
+      if($_SESSION['mojo_js_dir'] == ""){
+      self::Setup(true);
+    }
+
     }
 
     if(isset($args['action']) && $args['action'] != 'Setup' && $args['action'] != 'Clear')
@@ -79,23 +85,23 @@ class MojoConfig extends Mojo
 
     if($prompt){
 
-      $config['mojo_js_dir'] = promptUser('Please provide the full system path to your Mojo application '
+      $config['mojo_js_dir'] = promptUser('Please provide the full system path to your Mojo installation '
           .'- This is directory that contains SiteMap.js - (Include trailing slash)');
 
-      $arr = explode(DIRECTORY_SEPARATOR,$config['mojo_js_dir']);
+      $arr = explode(DIRECTOY_SEPARATOR,$config['mojo_js_dir']);
       $config['mojo_app_name'] = $arr[count($arr)-2];
     }
 
     $arr = explode(DIRECTORY_SEPARATOR,self::get('mojo_task_lib'));
-    $config['mojo_bin_dir'] = join(DIRECTORY_SEPARATOR,array_slice($arr,0,count($arr)-2)).DIRECTORY_SEPARATOR.'bin'.DIRECTORY_SEPARATOR ;
+    $config['mojo_bin_dir'] = join(DIRECTORY_SEPARATOR,array_slice($arr,0,count($arr)-2))
+                            .DIRECTORY_SEPARATOR.'bin'.DIRECTORY_SEPARATOR ;
 
     foreach($config as $key => $value){
       switch($key){
         case 'mojo_js_dir':
           $sitemap = getFile('SiteMap.js',$value);
 
-          if($sitemap){ 
-            $value = str_replace(basename($sitemap),"",$sitemap);
+          if($sitemap){ $value = str_replace(basename($sitemap),"",$sitemap);
           }else{
             self::Clear(false);
             Mojo::exception('SiteMap.js not found at '.$value);
@@ -122,9 +128,19 @@ class MojoConfig extends Mojo
   }
 
   public function Update(){
+    
+    $app = (!empty($this->args['app']))?$this->args['app']:'main';
+    unset($this->args['app']);
+
     Mojo::line();
     foreach($this->args as $k => $v){
-      $_SESSION[$k] = $v;
+    
+      if($k == 'mojo_base_dependencies'){        
+        $_SESSION['mojo_'.(!empty($app)?strtolower(trim($app)).'_':'').'base_dependencies'] = $v;
+      }else{
+        $_SESSION[$k] = trim($v);
+      }
+        
       Mojo::prompt($k.' updated to '.$v);
     }
     Mojo::line();
