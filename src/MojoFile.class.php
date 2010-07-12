@@ -50,6 +50,21 @@ class MojoFile extends Mojo
     }
     return $listDir;   
   } 
+  
+  static function makeNewFile($name,$type)
+  { 
+    $path = MojoConfig::get('mojo_js_dir').$type.DIRECTORY_SEPARATOR;   
+    $arr = explode($type.'.',$name);
+    array_shift($arr);
+    $dirs = explode('.',$arr[0]);
+    $file = trim(array_pop($dirs));
+    foreach($dirs as $dir){
+      $path .= $dir.DIRECTORY_SEPARATOR;
+      if(!is_dir($path)) mkdir($path);
+    }
+    
+    return $path.$file.'.js';
+  }
 }
 
 ?>

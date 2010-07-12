@@ -20,12 +20,12 @@ class Mojo
       {      
         $v = str_replace("--","",$v);
         $split = explode("=",$v);
-        $options[$split[0]] = $split[1];
+        $options[$split[0]] = trim($split[1]);
         
         for($i=($k+1);$i<=count($arguments);$i++)
         {
           if(strpos($arguments[$i],"--") > -1) break;          
-          $options[$split[0]] .= " ".$arguments[$i];
+          $options[$split[0]] .= " ".trim($arguments[$i]);
         }
       }
       

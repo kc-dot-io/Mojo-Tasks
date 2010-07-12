@@ -7,7 +7,7 @@
  * @author     Kyle Campbell
  */
 
-class MojoController extends Mojo
+class MojoController extends MojoFile
 {
   function __construct($args)
   {
@@ -26,12 +26,11 @@ class MojoController extends Mojo
           return Mojo::prompt('The name you provided for your Controller appears to be incorrect. '
                               .'Please use full Controller path, ie: name=mojo.controller.myController');
 
-      $source = MojoFile::editStream(array('app_name'=>MojoConfig::get('mojo_app_name')),self::Source());
+      $source = self::editStream(array('app_name'=>MojoConfig::get('mojo_app_name')),self::Source());
+      $file = self::makeNewFile($this->args['name'],'controller');
 
-      $name = explode('controller.',$this->args['name']); 
-
-      MojoFile::write(MojoConfig::get('mojo_js_dir').'controller/'.$name[1].'.js',MojoFile::editStream($this->args,$source));
-      Mojo::prompt('Generated Controller Scaffolding to '.MojoConfig::get('mojo_js_dir').'controller/'.$name[1].'.js');
+      self::write($file,self::editStream($this->args,$source));
+      Mojo::prompt('Generated Controller Scaffolding to '.$file);
   }
 
   function Source()

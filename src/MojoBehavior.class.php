@@ -7,7 +7,7 @@
  * @author     Kyle Campbell
  */
 
-class MojoBehavior extends Mojo
+class MojoBehavior extends MojoFile
 {
   function __construct($args)
   {
@@ -25,16 +25,12 @@ class MojoBehavior extends Mojo
       if(strpos($this->args['name'],'behavior.') < 1)
           return Mojo::prompt('The name you provided for your Behavior appears to be incorrect. '
                               .'Please use full Behavior path, ie: name=mojo.behavior.myBehavior');
-      $source = self::Source();
-     
-      $name = explode('behavior.',$this->args['name']); $name = $name[1];
-      if(strpos($name,'.') > -1) { //handle behaviors in a sub dir
-          $tmp = explode('.',$name); //check if this dir exists, and create it if it does not
-          if(!file_exists(MojoConfig::get('mojo_js_dir').'behavior/'.$tmp[0])) mkdir(MojoConfig::get('mojo_js_dir').'behavior/'.$tmp[0]);
-          $name = $tmp[0].'/'.$tmp[1]; //full path including new dir
-      }
-      MojoFile::write(MojoConfig::get('mojo_js_dir').'behavior/'.$name.'.js',MojoFile::editStream($this->args,$source));
-      Mojo::exception('Generated Behavior Scaffolding to '.MojoConfig::get('mojo_js_dir').'behavior/'.$name.'.js');
+                              
+      $source = self::Source();     
+      $file = self::makeNewFile($this->args['name'],'behavior');
+      
+      MojoFile::write($file,MojoFile::editStream($this->args,$source));
+      Mojo::prompt('Generated Behavior Scaffolding to '.$file);
   }
 
   function Source()

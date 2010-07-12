@@ -7,7 +7,7 @@
  * @author     Kyle Campbell
  */
 
-class MojoRules extends Mojo
+class MojoRules extends MojoFile
 {
   function __construct($args)
   {
@@ -17,21 +17,16 @@ class MojoRules extends Mojo
 
   function Scaffold()
   {
+    
       //Validation
       if(empty($this->args['name'])) return Mojo::exception('Provide a full mojo path in your params string, ie: name=mojo.rules.myRules');
       if(strpos($this->args['name'],'rules.') < 1) return Mojo::exception('Please use correct rules path, ie: name=mojo.rules.myRules');
 
       $source = self::Source();
-      $name = explode('rules.',$this->args['name']); $name = $name[1];
+      $file = self::makeNewFile($this->args['name'],'rules');     
 
-      if(strpos($name,'.') > -1) { //handle ruless in a sub dir
-          $tmp = explode('.',$name); //check if this dir exists, and create it if it does not
-          if(!file_exists(MojoConfig::get('sf_mojo_dir').'rules/'.$tmp[0])) mkdir(MojoConfig::get('sf_mojo_dir').'rules/'.$tmp[0]);
-          $name = $tmp[0].'/'.$tmp[1]; //full path including new dir
-      }
-
-      MojoFile::write(MojoConfig::get('sf_mojo_dir').'rules/'.$name.'.js',MojoFile::editStream($this->args,$source));
-      Mojo::prompt('Generated Rules Scaffolding to '.MojoConfig::get('sf_mojo_dir').'rules/'.$name.'.js');
+      MojoFile::write($file,MojoFile::editStream($this->args,$source));
+      Mojo::prompt('Generated Rules Scaffolding to '.$file);
   }
 
   function Source()
