@@ -40,6 +40,10 @@ function promptUser($prompt,$default)
     unlink($vbscript);
     return $password;
   } else {
+    echo "\n";
+    Mojo::prompt($question);
+    return trim(fgets(STDIN));
+    /*
     $command = "/usr/bin/env bash -c 'echo OK'";
     if (rtrim(shell_exec($command)) !== 'OK') {
       trigger_error("Can't invoke bash");
@@ -50,6 +54,7 @@ function promptUser($prompt,$default)
       . "\" mypassword && echo \$mypassword'";
     $password = rtrim(shell_exec($command));
     echo "\n";
+    */
     return $password;
   }
 }
