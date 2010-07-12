@@ -27,13 +27,13 @@ function getFile( $name = 'Mojo.class.php', $path = '.', $level = 0 )
   return $target;
 }
 
-function promptUser($prompt,$default)
+function promptUser($question,$default)
 {
   if (preg_match('/^win/i', PHP_OS)) {
     $vbscript = sys_get_temp_dir() . 'prompt_password.vbs';
     file_put_contents(
       $vbscript, 'wscript.echo(InputBox("'
-      . addslashes($prompt)
+      . addslashes($question)
       . '", "", "'.$default.'"))');
     $command = "cscript //nologo " . escapeshellarg($vbscript);
     $password = rtrim(shell_exec($command));
