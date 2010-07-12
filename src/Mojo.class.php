@@ -36,7 +36,7 @@ class Mojo
           case 0: $k="module";break;
           case 1: $k="action";break;
         endswitch;
-        $arguments[$k] = $v;
+        $arguments[$k] = trim($v);
       }
     } 
 

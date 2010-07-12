@@ -88,7 +88,7 @@ class MojoConfig extends Mojo
       $config['mojo_js_dir'] = promptUser('Please provide the full system path to your Mojo installation '
           .'- This is directory that contains SiteMap.js - (Include trailing slash)');
 
-      $arr = explode(DIRECTOY_SEPARATOR,$config['mojo_js_dir']);
+      $arr = explode(DIRECTORY_SEPARATOR,$config['mojo_js_dir']);
       $config['mojo_app_name'] = $arr[count($arr)-2];
     }
 

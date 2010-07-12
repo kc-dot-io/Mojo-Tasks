@@ -16,7 +16,7 @@ class MojoFile extends Mojo
   static function editStream($args,$stream)
   {
     if(empty($args)) return Mojo::prompt("Cannot edit stream, no args found");
-    foreach($args as $k => $v) $stream = str_replace("%".strtoupper($k)."%",$v,$stream);
+    foreach($args as $k => $v) $stream = str_replace("%".strtoupper($k)."%",trim($v),$stream);
     return (string)$stream;
   }
 
